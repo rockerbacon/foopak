@@ -1,0 +1,59 @@
+#!/bin/bash
+
+project_root=$(realpath $(dirname $0))
+modules_dir="$project_root/foopak_modules"
+
+mkdir -p "$modules_dir"
+
+print_add_help() {
+	echo "Usage: ./foopak add MODULE" >&2
+	echo "Add module located in path MODULE from a git server to the project" >&2
+	echo >&2
+	echo "MODULE:	path where the module resides in the git server" >&2
+	echo "	eg.:	'rockerbacon/foopak-mock-module' adds the module from" >&2
+	echo "		https://github.com/rockerbacon/foopak-mock-module" >&2
+}
+
+add() {
+	git_server="https://github.com"
+
+	module_path=$1; shift
+	if [ "$module_path" == "" ]; then
+		echo "ERROR: please specify a module to add" >&2
+		echo >&2
+		print_add_help
+		exit 1
+	fi
+
+	module_alias=$( \
+		echo $module_path \
+	| sed 's/\//_/g' \
+	)
+
+	git submodule add $git_server/$module_path "$modules_dir/$module_alias"
+
+	exec 3< "$modules_dir/$module_alias/foopak_meta/link_list.conf"
+		link_list_version=$(read -u 3)
+
+		while read -u 3 link || [ -n "$link" ]; do
+			[ "$link" == "" ] && continue
+			[ "${link:0:1}" == "#" ] && continue
+
+			file_path=$(echo "$link" | awk '{print $1}')
+			link_path=$(echo "$link" | awk '{print $2}')
+			link_dir=$(dirname "$link_path")
+
+			mkdir -p "$project_root/$link_dir"
+
+			ln -s "$modules_dir/$module_alias/$file_path" "$project_root/$link_path"
+		done
+	exec 3>&-
+}
+
+command=$1; shift
+case "$command" in
+	add|a)
+		add $@
+	;;
+esac
+
