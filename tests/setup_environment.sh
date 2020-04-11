@@ -13,7 +13,7 @@ fi
 mkdir -p /tmp/foopak_test_environments
 environment_dir=$(mktemp -d /tmp/foopak_test_environments/XXXXXX)
 
-cp -R "$project_root"/* $environment_dir/
+cp -R "$project_root"/* "$project_root"/.[!.]* $environment_dir/
 
 echo "$environment_dir"
 
