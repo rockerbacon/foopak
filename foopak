@@ -6,17 +6,57 @@ modules_dir="$project_root/foopak_modules"
 mkdir -p "$modules_dir"
 
 print_add_help() {
-	echo "Usage: ./foopak add MODULE" >&2
+	echo "Usage: ./foopak add [OPTIONS...] MODULE" >&2
 	echo "Add module located in path MODULE from a git server to the project" >&2
 	echo >&2
-	echo "MODULE:	path where the module resides in the git server" >&2
-	echo "	eg.:	'rockerbacon/foopak-mock-module' adds the module from" >&2
+	echo "MODULE:		path where the module resides in the git server. eg.:" >&2
+	echo "		'rockerbacon/foopak-mock-module' adds the module from" >&2
 	echo "		https://github.com/rockerbacon/foopak-mock-module" >&2
+	echo >&2
+	echo "OPTIONS:" >&2
+	echo "	--alias,-a	use different folder name for module" >&2
+	echo "			default is MODULE with slashes" >&2
+	echo "			replaced by underscores" >&2
 }
 
 add() {
+	###   DEFAULTS    ###
 	git_server="https://github.com"
 
+	module_alias=$( \
+		echo $module_path \
+	| sed 's/\//_/g' \
+	)
+	###   DEFAULTS   ###
+
+	###   READ NAMED ARGS    ###
+	reading_named_args=true
+	while [ "$reading_named_args" == "true" ]; do
+		option=$1
+		case "$option" in
+			--alias|-a)
+				module_alias=$2; shift 2
+			;;
+
+			--help|-h)
+				print_add_help
+				exit 0
+			;;
+
+			--*|-*)
+				echo "ERROR: Unknown option '$option'" >&2
+				echo; print_add_help
+				exit 1
+			;;
+
+			*)
+				reading_named_args=false
+			;;
+		esac
+	done
+	###   READ NAMED ARGS    ###
+
+	###   READ POSITIONAL ARGS    ###
 	module_path=$1; shift
 	if [ "$module_path" == "" ]; then
 		echo "ERROR: please specify a module to add" >&2
@@ -24,11 +64,7 @@ add() {
 		print_add_help
 		exit 1
 	fi
-
-	module_alias=$( \
-		echo $module_path \
-	| sed 's/\//_/g' \
-	)
+	###   READ POSITIONAL ARGS    ###
 
 	module_install_path="$modules_dir/$module_alias"
 
