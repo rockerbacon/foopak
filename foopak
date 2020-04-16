@@ -30,6 +30,13 @@ add() {
 	| sed 's/\//_/g' \
 	)
 
+	module_install_path="$modules_dir/$module_alias"
+
+	if [ -e "$module_install_path" ]; then
+		echo "ERROR: could not add module: '$module_install_path' already exists" >&2
+		exit 1
+	fi
+
 	git submodule add $git_server/$module_path "$modules_dir/$module_alias"
 
 	exec 3< "$modules_dir/$module_alias/foopak_meta/link_list.conf"
