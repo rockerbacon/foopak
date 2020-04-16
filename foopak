@@ -22,11 +22,6 @@ print_add_help() {
 add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
-
-	module_alias=$( \
-		echo $module_path \
-	| sed 's/\//_/g' \
-	)
 	###   DEFAULTS   ###
 
 	###   READ NAMED ARGS    ###
@@ -64,10 +59,16 @@ add() {
 		print_add_help
 		exit 1
 	fi
+
+	if [ "$module_alias" == "" ]; then
+		module_alias=$( \
+			echo $module_path \
+		| sed 's/\//_/g' \
+		)
+	fi
 	###   READ POSITIONAL ARGS    ###
 
 	module_install_path="$modules_dir/$module_alias"
-
 	if [ -e "$module_install_path" ]; then
 		echo "ERROR: could not add module: '$module_install_path' already exists" >&2
 		exit 1
@@ -88,7 +89,15 @@ add() {
 
 			mkdir -p "$project_root/$link_dir"
 
-			ln -s "$modules_dir/$module_alias/$file_path" "$project_root/$link_path"
+			ln -s "$module_install_path/$file_path" "$project_root/$link_path"; \
+				link_success=$?
+
+			if [ "$link_success" != "0" ]; then
+				echo -n "ERROR: could not add module:" >&2
+				echo -n " cannot link '$module_install_path/$file_path' to '$project_root/$link_path'" >&2
+				echo " because file already exists" >&2
+				exit 1
+			fi
 		done
 	exec 3>&-
 }
