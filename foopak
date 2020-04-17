@@ -99,6 +99,7 @@ add() {
 
 			if [ -n "$conflicting_module" ]; then
 				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
+				# TODO rollback once remove command is working
 				exit 1
 			fi
 		done
