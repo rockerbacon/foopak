@@ -3,6 +3,8 @@
 project_root=$(realpath $(dirname $0))
 modules_dir="$project_root/foopak_modules"
 
+escaped_project_root=$(echo "$project_root" | sed 's/\//\\\//g')
+
 mkdir -p "$modules_dir"
 
 print_add_help() {
@@ -60,7 +62,7 @@ add() {
 		exit 1
 	fi
 
-	if [ "$module_alias" == "" ]; then
+	if [ -z "$module_alias" ]; then
 		module_alias=$( \
 			echo $module_path \
 		| sed 's/\//_/g' \
@@ -70,42 +72,64 @@ add() {
 
 	module_install_path="$modules_dir/$module_alias"
 	if [ -e "$module_install_path" ]; then
-		echo "ERROR: could not add module: '$module_install_path' already exists" >&2
+		relative_install_path=$(realpath --relative-to "$project_root" "$module_install_path")
+		echo "ERROR: could not add module: directory '$relative_install_path' already exists" >&2
 		exit 1
 	fi
 
 	git submodule add $git_server/$module_path "$modules_dir/$module_alias"
 
-	exec 3< "$modules_dir/$module_alias/foopak_meta/link_list.conf"
-		link_list_version=$(read -u 3)
+	exec 3< "$modules_dir/$module_alias/foopak_meta/command_list.conf"
+		command_list_version=$(read -u 3)
 
-		while read -u 3 link || [ -n "$link" ]; do
-			[ "$link" == "" ] && continue
-			[ "${link:0:1}" == "#" ] && continue
+		while read -u 3 command || [ -n "$command" ]; do
+			[ "$command" == "" ] && continue
+			[ "${command:0:1}" == "#" ] && continue
 
-			file_path=$(echo "$link" | awk '{print $1}')
-			link_path=$(echo "$link" | awk '{print $2}')
-			link_dir=$(dirname "$link_path")
+			command=$(echo "$command" | sed "s/\s.*$//")
 
-			mkdir -p "$project_root/$link_dir"
+			conflicting_module=$( \
+							find "$project_root/foopak_modules" \
+								-not -path "$module_install_path/*" \
+								-path "*/foopak_meta/*" \
+								-name command_list.conf \
+				-exec	grep --with-filename -E "^$command\s" {} + \
+					|		sed "s/$escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
+			)
 
-			ln -s "$module_install_path/$file_path" "$project_root/$link_path"; \
-				link_success=$?
-
-			if [ "$link_success" != "0" ]; then
-				echo -n "ERROR: could not add module:" >&2
-				echo -n " cannot link '$module_install_path/$file_path' to '$project_root/$link_path'" >&2
-				echo " because file already exists" >&2
+			if [ -n "$conflicting_module" ]; then
+				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
 				exit 1
 			fi
 		done
 	exec 3>&-
 }
 
+module_command() {
+	command_name=$1; shift
+
+	command_script=$( \
+					find "$project_root/foopak_modules" -path '*/foopak_meta/*' -name command_list.conf \
+		-exec	grep --with-filename -E "^$command_name\s" {} + \
+			|		sed "s/foopak_meta\/command_list\.conf.*\s//" \
+	)
+
+	if [[ -z "$command_script" ]]; then
+		echo "ERROR: unknown command '$command_name'" >&2
+		exit 1
+	fi
+
+	. "$command_script" $@
+}
+
 command=$1; shift
 case "$command" in
 	add|a)
 		add $@
+	;;
+
+	*)
+		module_command $command $@
 	;;
 esac
 
