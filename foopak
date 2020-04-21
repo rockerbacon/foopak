@@ -21,6 +21,16 @@ print_add_help() {
 	echo "			replaced by underscores" >&2
 }
 
+print_remove_help() {
+	echo "Usage: ./foopak remove [OPTIONS...] MODULE" >&2
+	echo "Remove module located in path 'foopak_modules/MODULE'" >&2
+	echo >&2
+	echo "MODULE:		module to remove" >&2
+	echo "		use './foopak list' to see all installed modules" >&2
+	echo >&2
+	echo "OPTIONS:" >&2
+}
+
 add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
@@ -106,9 +116,61 @@ add() {
 	exec 3>&-
 }
 
+remove() {
+	###    DEFAULTS    ###
+	###    DEFAULTS    ###
+
+	###    READ NAMED ARGS    ###
+	reading_named_args=true
+	while [ "$reading_named_args" == "true" ]; do
+		option=$1
+		case "$option" in
+			--help|-h)
+				print_remove_help
+				exit 0
+			;;
+
+			--*|-*)
+				echo "ERROR: Unknown option '$option'" >&2
+				echo; print_remove_help
+				exit 1
+			;;
+
+			*)
+				reading_named_args=false
+			;;
+		esac
+	done
+	###    READ NAMED ARGS    ###
+
+	###    READ POSITIONAL ARGS    ###
+	module_alias=$1; shift
+
+	if [ -z "$module_alias" ]; then
+		echo "ERROR: please specify the module to remove" >&2
+		echo >&2
+		print_remove_help
+		exit 1
+	fi
+	###    READ POSITIONAL ARGS    ###
+
+	module_install_path="$modules_dir/$module_alias"
+
+	if [ ! -d "$module_install_path" ]; then
+		echo "ERROR: module '$module_alias' not installed" >&2
+		echo >&2
+		print_remove_help
+		exit 1
+	fi
+
+	git submodule deinit -f "$module_install_path"
+	git rm -f "$module_install_path"
+}
+
 module_command() {
 	command_name=$1; shift
 
+	# TODO cache command list
 	command_script=$( \
 					find "$project_root/foopak_modules" -path '*/foopak_meta/*' -name command_list.conf \
 		-exec	grep --with-filename -E "^$command_name\s" {} + \
@@ -127,6 +189,10 @@ command=$1; shift
 case "$command" in
 	add|a)
 		add $@
+	;;
+
+	remove|r)
+		remove $@
 	;;
 
 	*)
