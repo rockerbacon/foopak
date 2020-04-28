@@ -1,13 +1,14 @@
 #!/bin/bash
 
-project_root=$(realpath $(dirname $0))
-modules_dir="$project_root/foopak_modules"
+fpv_project_root=$(realpath $(dirname $0))
+fpv_modules_dir="$fpv_project_root/foopak_modules"
 
-escaped_project_root=$(echo "$project_root" | sed 's/\//\\\//g')
+fpv_escaped_project_root=$(echo "$fpv_project_root" | sed 's/\//\\\//g')
+fpv_escaped_modules_dir=$(echo "$fpv_modules_dir" | sed 's/\//\\\//g')
 
-mkdir -p "$modules_dir"
+mkdir -p "$fpv_modules_dir"
 
-print_remove_help() {
+fpp_print_remove_help() {
 	echo "Usage: ./foopak remove [OPTIONS...] MODULE" >&2
 	echo "Remove module located in path 'foopak_modules/MODULE'" >&2
 	echo >&2
@@ -17,7 +18,7 @@ print_remove_help() {
 	echo "OPTIONS:" >&2
 }
 
-print_add_help() {
+fpp_print_add_help() {
 	echo "Usage: ./foopak add [OPTIONS...] MODULE" >&2
 	echo "Add module located in path MODULE from a git server to the project" >&2
 	echo >&2
@@ -31,7 +32,7 @@ print_add_help() {
 	echo "			replaced by underscores" >&2
 }
 
-remove() {
+fpf_remove() {
 	###    DEFAULTS    ###
 	###    DEFAULTS    ###
 
@@ -41,13 +42,13 @@ remove() {
 		option=$1
 		case "$option" in
 			--help|-h)
-				print_remove_help
+				fpp_print_remove_help
 				exit 0
 			;;
 
 			--*|-*)
 				echo "ERROR: Unknown option '$option'" >&2
-				echo; print_remove_help
+				echo; fpp_print_remove_help
 				exit 1
 			;;
 
@@ -64,17 +65,17 @@ remove() {
 	if [ -z "$module_alias" ]; then
 		echo "ERROR: please specify the module to remove" >&2
 		echo >&2
-		print_remove_help
+		fpp_print_remove_help
 		exit 1
 	fi
 	###    READ POSITIONAL ARGS    ###
 
-	module_install_path="$modules_dir/$module_alias"
+	module_install_path="$fpv_modules_dir/$module_alias"
 
 	if [ ! -d "$module_install_path" ]; then
 		echo "ERROR: module '$module_alias' not installed" >&2
 		echo >&2
-		print_remove_help
+		fpp_print_remove_help
 		exit 1
 	fi
 
@@ -82,7 +83,7 @@ remove() {
 	git rm -f "$module_install_path"
 }
 
-add() {
+fpf_add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
 	###   DEFAULTS   ###
@@ -130,13 +131,13 @@ add() {
 
 	relative_parent_dir=$(dirname "$module_alias")
 	if [ "${relative_parent_dir:0:1}" != "." ]; then
-		mkdir -p "$modules_dir/$relative_parent_dir"
+		mkdir -p "$fpv_modules_dir/$relative_parent_dir"
 	fi
 
-	module_install_path="$modules_dir/$module_alias"
+	module_install_path="$fpv_modules_dir/$module_alias"
 
 	if [ -e "$module_install_path" ]; then
-		relative_install_path=$(realpath --relative-to "$project_root" "$module_install_path")
+		relative_install_path=$(realpath --relative-to "$fpv_project_root" "$module_install_path")
 		echo "ERROR: could not add module: directory '$relative_install_path' already exists" >&2
 		exit 1
 	fi
@@ -153,12 +154,12 @@ add() {
 			command=$(echo "$command" | sed "s/\s.*$//")
 
 			conflicting_module=$( \
-							find "$project_root/foopak_modules" \
+							find "$fpv_project_root/foopak_modules" \
 								-not -path "$module_install_path/*" \
 								-path "*/foopak_meta/*" \
 								-name command_list.conf \
 				-exec	grep --with-filename -E "^$command\s" {} + \
-					|		sed "s/$escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
+					|		sed "s/$fpv_escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
 			)
 
 			if [ -n "$conflicting_module" ]; then
@@ -170,12 +171,12 @@ add() {
 	exec 3>&-
 }
 
-exec_module_command() {
+fpf_exec_module_command() {
 	command_name=$1; shift
 
 	# TODO cache command list
 	command_script=$( \
-					find "$project_root/foopak_modules" -path '*/foopak_meta/*' -name command_list.conf \
+					find "$fpv_project_root/foopak_modules" -path '*/foopak_meta/*' -name command_list.conf \
 		-exec	grep --with-filename -E "^$command_name\s" {} + \
 			|		sed "s/foopak_meta\/command_list\.conf.*\s//" \
 	)
@@ -191,15 +192,15 @@ exec_module_command() {
 command=$1; shift
 case "$command" in
 	remove|r)
-		remove $@
+		fpf_remove $@
 	;;
 
 	add|a)
-		add $@
+		fpf_add $@
 	;;
 
 	*)
-		exec_module_command $command $@
+		fpf_exec_module_command $command $@
 	;;
 esac
 
