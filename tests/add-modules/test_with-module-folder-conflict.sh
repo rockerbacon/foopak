@@ -7,6 +7,8 @@ oneTimeSetUp() {
 	cd $environment_dir
 	mkdir -p foopak_modules/rockerbacon/foopak-mock-module
 	output=$(./foopak add rockerbacon/foopak-mock-module 2>&1); exit_code=$?
+
+	gitmodules_content=$(cat .gitmodules)
 }
 
 oneTimeTearDown() {
@@ -24,6 +26,13 @@ test_should_inform_user_folder_already_exists() {
 	expected_error_message="could not add module: directory 'foopak_modules/rockerbacon/foopak-mock-module' already exists"
 
 	assertContains "output not informative:\n$output\n\n" "$output" "$expected_error_message"
+}
+
+test_should_not_add_module() {
+	assertNotContains \
+		"module was added to .gitmodules:\n$output\n\n$gitmodules_content\n" \
+		"$gitmodules_content" \
+		"rockerbacon/foopak-mock-module"
 }
 
 . "$project_root/shunit2/shunit2"

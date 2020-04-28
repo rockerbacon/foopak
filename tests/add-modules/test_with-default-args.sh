@@ -7,6 +7,8 @@ oneTimeSetUp() {
 	cd $environment_dir
 	output=$(./foopak add rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
+
+	gitmodules_content=$(cat .gitmodules)
 }
 
 oneTimeTearDown() {
@@ -41,6 +43,20 @@ test_should_not_be_able_to_execute_scripts_not_in_command_list() {
 	actual_output=$(./foopak unlinked-file 2>&1); exit_status=$?
 	assertNotEquals "program exited with success code." "0" "$exit_status"
 	assertContains "output not informative:\n$output\n\n" "$actual_output" "$expected_output"
+}
+
+test_should_add_module_as_git_module() {
+	assertContains \
+		"module not correctly added to .gitmodules:\n$output\n\n$gitmodules_content\n\n" \
+		"$gitmodules_content" \
+		"foopak_modules/rockerbacon/foopak-mock-module"
+}
+
+test_should_add_module_using_relative_path() {
+	assertNotContains \
+		".gitmodules contains module added with absolute path:\n$output\n\n$gitmodules_content\n\n" \
+		"$gitmodules_content" \
+		"$project_root"
 }
 
 . "$project_root/shunit2/shunit2"

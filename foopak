@@ -1,7 +1,10 @@
 #!/bin/bash
 
 fpv_project_root=$(realpath $(dirname $0))
-fpv_modules_dir="$fpv_project_root/foopak_modules"
+
+fpv_relative_modules_dir=foopak_modules
+
+fpv_modules_dir="$fpv_project_root/$fpv_relative_modules_dir"
 
 fpv_escaped_project_root=$(echo "$fpv_project_root" | sed 's/\//\\\//g')
 fpv_escaped_modules_dir=$(echo "$fpv_modules_dir" | sed 's/\//\\\//g')
@@ -129,19 +132,19 @@ fpf_add() {
 	fi
 	###   READ POSITIONAL ARGS    ###
 
-	relative_parent_dir=$(dirname "$module_alias")
-	if [ "${relative_parent_dir:0:1}" != "." ]; then
-		mkdir -p "$fpv_modules_dir/$relative_parent_dir"
+	module_parent_dir=$(dirname "$module_alias")
+	if [ "${module_parent_dir:0:1}" != "." ]; then
+		mkdir -p "$fpv_modules_dir/$module_parent_dir"
 	fi
 
-	module_install_path="$fpv_modules_dir/$module_alias"
+	module_install_path="$fpv_relative_modules_dir/$module_alias"
 
 	if [ -e "$module_install_path" ]; then
-		relative_install_path=$(realpath --relative-to "$fpv_project_root" "$module_install_path")
-		echo "ERROR: could not add module: directory '$relative_install_path' already exists" >&2
+		echo "ERROR: could not add module: directory '$module_install_path' already exists" >&2
 		exit 1
 	fi
 
+	cd "$fpv_project_root"
 	git submodule add $git_server/$module_path "$module_install_path"
 
 	exec 3< "$module_install_path/foopak_meta/command_list.conf"
@@ -155,7 +158,7 @@ fpf_add() {
 
 			conflicting_module=$( \
 							find "$fpv_project_root/foopak_modules" \
-								-not -path "$module_install_path/*" \
+								-not -path "$fpv_project_root/$module_install_path/*" \
 								-path "*/foopak_meta/*" \
 								-name command_list.conf \
 				-exec	grep --with-filename -E "^$command\s" {} + \
@@ -164,7 +167,7 @@ fpf_add() {
 
 			if [ -n "$conflicting_module" ]; then
 				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
-				# TODO rollback once remove command is working
+				fpf_remove "$module_alias"
 				exit 1
 			fi
 		done
