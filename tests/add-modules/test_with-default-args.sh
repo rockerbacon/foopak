@@ -19,7 +19,9 @@ test_should_execute_without_errors() {
 }
 
 test_should_add_module_in_correct_path() {
-	assertTrue "[ -d foopak_modules/rockerbacon_foopak-mock-module ]"
+	assertTrue \
+		"path 'foopak_modules/rockerbacon/foopak-mock-module' not found" \
+		"[ -d foopak_modules/rockerbacon/foopak-mock-module ]"
 }
 
 test_should_be_able_to_execute_scripts_in_module_root() {

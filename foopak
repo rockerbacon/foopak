@@ -7,6 +7,16 @@ escaped_project_root=$(echo "$project_root" | sed 's/\//\\\//g')
 
 mkdir -p "$modules_dir"
 
+print_remove_help() {
+	echo "Usage: ./foopak remove [OPTIONS...] MODULE" >&2
+	echo "Remove module located in path 'foopak_modules/MODULE'" >&2
+	echo >&2
+	echo "MODULE:		module to remove" >&2
+	echo "		use './foopak list' to see all installed modules" >&2
+	echo >&2
+	echo "OPTIONS:" >&2
+}
+
 print_add_help() {
 	echo "Usage: ./foopak add [OPTIONS...] MODULE" >&2
 	echo "Add module located in path MODULE from a git server to the project" >&2
@@ -19,101 +29,6 @@ print_add_help() {
 	echo "	--alias,-a	use different folder name for module" >&2
 	echo "			default is MODULE with slashes" >&2
 	echo "			replaced by underscores" >&2
-}
-
-print_remove_help() {
-	echo "Usage: ./foopak remove [OPTIONS...] MODULE" >&2
-	echo "Remove module located in path 'foopak_modules/MODULE'" >&2
-	echo >&2
-	echo "MODULE:		module to remove" >&2
-	echo "		use './foopak list' to see all installed modules" >&2
-	echo >&2
-	echo "OPTIONS:" >&2
-}
-
-add() {
-	###   DEFAULTS    ###
-	git_server="https://github.com"
-	###   DEFAULTS   ###
-
-	###   READ NAMED ARGS    ###
-	reading_named_args=true
-	while [ "$reading_named_args" == "true" ]; do
-		option=$1
-		case "$option" in
-			--alias|-a)
-				module_alias=$2; shift 2
-			;;
-
-			--help|-h)
-				print_add_help
-				exit 0
-			;;
-
-			--*|-*)
-				echo "ERROR: Unknown option '$option'" >&2
-				echo; print_add_help
-				exit 1
-			;;
-
-			*)
-				reading_named_args=false
-			;;
-		esac
-	done
-	###   READ NAMED ARGS    ###
-
-	###   READ POSITIONAL ARGS    ###
-	module_path=$1; shift
-	if [ "$module_path" == "" ]; then
-		echo "ERROR: please specify a module to add" >&2
-		echo >&2
-		print_add_help
-		exit 1
-	fi
-
-	if [ -z "$module_alias" ]; then
-		module_alias=$( \
-			echo $module_path \
-		| sed 's/\//_/g' \
-		)
-	fi
-	###   READ POSITIONAL ARGS    ###
-
-	module_install_path="$modules_dir/$module_alias"
-	if [ -e "$module_install_path" ]; then
-		relative_install_path=$(realpath --relative-to "$project_root" "$module_install_path")
-		echo "ERROR: could not add module: directory '$relative_install_path' already exists" >&2
-		exit 1
-	fi
-
-	git submodule add $git_server/$module_path "$modules_dir/$module_alias"
-
-	exec 3< "$modules_dir/$module_alias/foopak_meta/command_list.conf"
-		command_list_version=$(read -u 3)
-
-		while read -u 3 command || [ -n "$command" ]; do
-			[ "$command" == "" ] && continue
-			[ "${command:0:1}" == "#" ] && continue
-
-			command=$(echo "$command" | sed "s/\s.*$//")
-
-			conflicting_module=$( \
-							find "$project_root/foopak_modules" \
-								-not -path "$module_install_path/*" \
-								-path "*/foopak_meta/*" \
-								-name command_list.conf \
-				-exec	grep --with-filename -E "^$command\s" {} + \
-					|		sed "s/$escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
-			)
-
-			if [ -n "$conflicting_module" ]; then
-				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
-				# TODO rollback once remove command is working
-				exit 1
-			fi
-		done
-	exec 3>&-
 }
 
 remove() {
@@ -167,7 +82,95 @@ remove() {
 	git rm -f "$module_install_path"
 }
 
-module_command() {
+add() {
+	###   DEFAULTS    ###
+	git_server="https://github.com"
+	###   DEFAULTS   ###
+
+	###   READ NAMED ARGS    ###
+	reading_named_args=true
+	while [ "$reading_named_args" == "true" ]; do
+		option=$1
+		case "$option" in
+			--alias|-a)
+				module_alias=$2; shift 2
+			;;
+
+			--help|-h)
+				print_add_help
+				exit 0
+			;;
+
+			--*|-*)
+				echo "ERROR: Unknown option '$option'" >&2
+				echo; print_add_help
+				exit 1
+			;;
+
+			*)
+				reading_named_args=false
+			;;
+		esac
+	done
+	###   READ NAMED ARGS    ###
+
+	###   READ POSITIONAL ARGS    ###
+	module_path=$1; shift
+	if [ "$module_path" == "" ]; then
+		echo "ERROR: please specify a module to add" >&2
+		echo >&2
+		print_add_help
+		exit 1
+	fi
+
+	if [ -z "$module_alias" ]; then
+		module_alias=$module_path
+	fi
+	###   READ POSITIONAL ARGS    ###
+
+	relative_parent_dir=$(dirname "$module_alias")
+	if [ "${relative_parent_dir:0:1}" != "." ]; then
+		mkdir -p "$modules_dir/$relative_parent_dir"
+	fi
+
+	module_install_path="$modules_dir/$module_alias"
+
+	if [ -e "$module_install_path" ]; then
+		relative_install_path=$(realpath --relative-to "$project_root" "$module_install_path")
+		echo "ERROR: could not add module: directory '$relative_install_path' already exists" >&2
+		exit 1
+	fi
+
+	git submodule add $git_server/$module_path "$module_install_path"
+
+	exec 3< "$module_install_path/foopak_meta/command_list.conf"
+		command_list_version=$(read -u 3)
+
+		while read -u 3 command || [ -n "$command" ]; do
+			[ -z "$command" ] && continue
+			[ "${command:0:1}" == "#" ] && continue
+
+			command=$(echo "$command" | sed "s/\s.*$//")
+
+			conflicting_module=$( \
+							find "$project_root/foopak_modules" \
+								-not -path "$module_install_path/*" \
+								-path "*/foopak_meta/*" \
+								-name command_list.conf \
+				-exec	grep --with-filename -E "^$command\s" {} + \
+					|		sed "s/$escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
+			)
+
+			if [ -n "$conflicting_module" ]; then
+				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
+				# TODO rollback once remove command is working
+				exit 1
+			fi
+		done
+	exec 3>&-
+}
+
+exec_module_command() {
 	command_name=$1; shift
 
 	# TODO cache command list
@@ -177,7 +180,7 @@ module_command() {
 			|		sed "s/foopak_meta\/command_list\.conf.*\s//" \
 	)
 
-	if [[ -z "$command_script" ]]; then
+	if [ -z "$command_script" ]; then
 		echo "ERROR: unknown command '$command_name'" >&2
 		exit 1
 	fi
@@ -187,16 +190,16 @@ module_command() {
 
 command=$1; shift
 case "$command" in
-	add|a)
-		add $@
-	;;
-
 	remove|r)
 		remove $@
 	;;
 
+	add|a)
+		add $@
+	;;
+
 	*)
-		module_command $command $@
+		exec_module_command $command $@
 	;;
 esac
 

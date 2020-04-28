@@ -22,7 +22,7 @@ test_should_exit_with_error_code() {
 test_should_inform_user_of_command_conflict() {
 	assertNotNull "no output from program." "$output"
 
-	expected_error_message="command 'cmd-1' conflicts with module 'rockerbacon_foopak-mock-module'"
+	expected_error_message="command 'cmd-1' conflicts with module 'rockerbacon/foopak-mock-module'"
 
 	assertContains "missing proper error message:\n$output\n\n" "$output" "$expected_error_message"
 }
