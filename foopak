@@ -12,27 +12,31 @@ fpv_escaped_modules_dir=$(echo "$fpv_modules_dir" | sed 's/\//\\\//g')
 mkdir -p "$fpv_modules_dir"
 
 fpp_print_remove_help() {
-	echo "Usage: ./foopak remove [OPTIONS...] MODULE" >&2
-	echo "Remove module located in path 'foopak_modules/MODULE'" >&2
-	echo >&2
-	echo "MODULE:		module to remove" >&2
-	echo "		use './foopak list' to see all installed modules" >&2
-	echo >&2
-	echo "OPTIONS:" >&2
+cat >&2 << EOF
+Usage: ./foopak remove [OPTIONS...] MODULE
+Remove module located in path 'foopak_modules/MODULE'
+
+MODULE:		module to remove" >&2
+		use './foopak list' to see all installed modules
+
+OPTIONS:
+EOF
 }
 
 fpp_print_add_help() {
-	echo "Usage: ./foopak add [OPTIONS...] MODULE" >&2
-	echo "Add module located in path MODULE from a git server to the project" >&2
-	echo >&2
-	echo "MODULE:		path where the module resides in the git server. eg.:" >&2
-	echo "		'rockerbacon/foopak-mock-module' adds the module from" >&2
-	echo "		https://github.com/rockerbacon/foopak-mock-module" >&2
-	echo >&2
-	echo "OPTIONS:" >&2
-	echo "	--alias,-a	use different folder name for module" >&2
-	echo "			default is MODULE with slashes" >&2
-	echo "			replaced by underscores" >&2
+cat >&2 << EOF
+Usage: ./foopak add [OPTIONS...] MODULE
+Add module located in path MODULE from a git server to the project
+
+MODULE:		path where the module resides in the git server. eg.:
+		'rockerbacon/foopak-mock-module' adds the module from
+		https://github.com/rockerbacon/foopak-mock-module
+
+OPTIONS:
+	--alias,-a	use different folder name for module
+			default is MODULE with slashes
+			replaced by underscores
+EOF
 }
 
 fpf_remove() {
