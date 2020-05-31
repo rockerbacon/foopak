@@ -20,6 +20,7 @@ MODULE:		module to remove" >&2
 		use './foopak list' to see all installed modules
 
 OPTIONS:
+	--help,-h	print this help message and exit
 EOF
 }
 
@@ -36,6 +37,15 @@ OPTIONS:
 	--alias,-a	use different folder name for module
 			default is MODULE with slashes
 			replaced by underscores
+
+	--tag,-t,	use specific tag or commit
+	--commit,-c	default is the latest commit in the default remote
+
+	--branch,-b	use specific branch
+			default is the default remote branch
+
+	--help,-h	print this help message and exit
+
 EOF
 }
 
@@ -93,6 +103,7 @@ fpf_remove() {
 fpf_add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
+	module_options=()
 	###   DEFAULTS   ###
 
 	###   READ NAMED ARGS    ###
@@ -102,6 +113,14 @@ fpf_add() {
 		case "$option" in
 			--alias|-a)
 				module_alias=$2; shift 2
+			;;
+
+			--branch|-b)
+				module_options+=("-b" "$2"); shift 2
+			;;
+
+			--commit|-c|--tag|-t)
+				module_version=$2; shift 2
 			;;
 
 			--help|-h)
@@ -149,7 +168,19 @@ fpf_add() {
 	fi
 
 	cd "$fpv_project_root"
-	git submodule add $git_server/$module_path "$module_install_path"
+	git submodule add ${module_options[@]} $git_server/$module_path "$module_install_path"
+
+	if [ -n "$module_version" ]; then
+		restore_workdir=$PWD
+		cd "$fpv_project_root/$module_install_path"
+			git checkout $module_version; exit_status=$?
+		cd "$restore_workdir"
+		if [ "$exit_status" != "0" ]; then
+			echo "ERROR: could not checkout version '$module_version', rolling back" >&2
+			fpf_remove "$module_alias"
+			exit 1
+		fi
+	fi
 
 	exec 3< "$module_install_path/foopak_meta/command_list.conf"
 		command_list_version=$(read -u 3)
