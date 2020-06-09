@@ -9,13 +9,13 @@ oneTimeSetUp() {
 
 	git submodule add \
 		https://github.com/rockerbacon/foopak-mock-module \
-		foopak_modules/rockerbacon_foopak-mock-module \
+		foopak_modules/rockerbacon/foopak-mock-module \
 	&> /dev/null
 
 	echo "unrelated_change" >> .gitignore
 	touch unrelated_file
 
-	output=$(./foopak remove rockerbacon_foopak-mock-module 2>&1); \
+	output=$(./foopak remove rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
 
 	working_tree_state=$(git status)
@@ -35,8 +35,8 @@ test_should_execute_successfuly() {
 
 test_should_remove_module_folder() {
 	assertFalse \
-		"did not remove 'foopak_modules/rockerbacon_foopak-mock-module'." \
-		"[ -d foopak_modules/rockerbacon_foopak-mock-module ]"
+		"did not remove 'foopak_modules/rockerbacon/foopak-mock-module'." \
+		"[ -d foopak_modules/rockerbacon/foopak-mock-module ]"
 }
 
 test_should_remove_module_from_gitmodules() {
@@ -44,13 +44,13 @@ test_should_remove_module_from_gitmodules() {
 	assertNotContains \
 		"module still listed in '.gitmodules'" \
 		"$gitmodules" \
-		"rockerbacon_foopak-mock-module"
+		"rockerbacon/foopak-mock-module"
 }
 
 test_should_remove_module_from_cache() {
 	assertFalse \
 		"module still cached in '.git/modules'" \
-		"[ -d .git/modules/rockerbacon_foopak-mock-module ]"
+		"[ -d .git/modules/rockerbacon/foopak-mock-module ]"
 }
 
 test_should_remove_module_from_config() {
@@ -58,7 +58,7 @@ test_should_remove_module_from_config() {
 	assertNotContains \
 		"module still listed in '.git/config'" \
 		"$gitconfig" \
-		"rockerbacon_foopak-mock-module"
+		"rockerbacon/foopak-mock-module"
 }
 
 test_should_remove_module_from_the_working_tree() {
