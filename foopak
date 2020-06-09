@@ -57,6 +57,7 @@ EOF
 
 fpf_remove() {
 	###    DEFAULTS    ###
+	modules_relative_dir="foopak_modules"
 	###    DEFAULTS    ###
 
 	###    READ NAMED ARGS    ###
@@ -64,6 +65,10 @@ fpf_remove() {
 	while [ "$reading_named_args" == "true" ]; do
 		option=$1
 		case "$option" in
+			--dir|-d)
+				modules_relative_dir=$2; shift 2
+			;;
+
 			--help|-h)
 				fpp_print_remove_help
 				exit 0
@@ -93,7 +98,9 @@ fpf_remove() {
 	fi
 	###    READ POSITIONAL ARGS    ###
 
-	module_install_path="$fpv_modules_dir/$module_alias"
+	modules_dir="$fpv_project_root/$modules_relative_dir"
+
+	module_install_path="$modules_dir/$module_alias"
 
 	if [ ! -d "$module_install_path" ]; then
 		echo "ERROR: module '$module_alias' not installed" >&2
