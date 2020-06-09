@@ -48,6 +48,75 @@ OPTIONS:
 EOF
 }
 
+locate_command() {
+	if [ ! -d "$project_root/foopak_modules" ]; then
+		return 0
+	fi
+
+	###    DEFAULTS    ###
+	extra_tests=()
+	output_mode="script"
+	relative_path=true
+	###    DEFAULTS    ###
+
+	###    READ NAMED ARGS    ###
+	reading_named_args=true
+	while [ "$reading_named_args" == "true" ]; do
+		option=$1
+		case "$option" in
+			--exclude-dir)
+				extra_tests+=("-not -path '$project_root/$2/*'"); shift 2
+			;;
+
+			--absolute-path)
+				relative_path=false; shift 1
+			;;
+
+			--print-module)
+				output_mode="module"; shift 1
+			;;
+
+			--*|-*)
+				echo "ERROR: unknown option '$option'" >&2
+			;;
+
+			*)
+				reading_named_args=false
+			;;
+		esac
+	done
+	###    READ NAMED ARGS    ###
+
+	###    READ POSITIONAL ARGS    ###
+	command_name=$1; shift
+	###    READ POSITIONAL ARGS    ###
+
+	find_query=" \
+					find '$project_root/foopak_modules' \
+						${extra_tests[*]} \
+						-path '*/foopak_meta/*' \
+						-name command_list.conf \
+		-exec	grep --with-filename -E '^$command_name\s' {} + \
+	"
+	command_location=$(bash -c "$find_query")
+
+	if [ "$relative_path" == "true" ]; then
+		command_location=$(echo "$command_location" | sed "s/$escaped_project_root\/foopak_modules\///")
+	fi
+
+	case "$output_mode" in
+		script)
+				echo "$command_location" \
+			|	sed "s/foopak_meta\/command_list\.conf.*\s//"
+		;;
+
+		module)
+				echo "$command_location" \
+			|	sed "s/\/foopak_meta.*$//"
+		;;
+	esac
+}
+
 remove() {
 	###    DEFAULTS    ###
 	module_home_relative_dir="foopak_modules"
@@ -69,7 +138,8 @@ remove() {
 
 			--*|-*)
 				echo "ERROR: Unknown option '$option'" >&2
-				echo; print_remove_help
+				echo >&2
+				print_remove_help >&2
 				exit 1
 			;;
 
@@ -142,7 +212,8 @@ add() {
 
 			--*|-*)
 				echo "ERROR: Unknown option '$option'" >&2
-				echo; print_add_help
+				echo >&2
+				print_add_help >&2
 				exit 1
 			;;
 
@@ -205,14 +276,7 @@ add() {
 
 			command=$(echo "$command" | sed "s/\s.*$//")
 
-			conflicting_module=$( \
-							find "$project_root/foopak_modules" \
-								-not -path "$project_root/$module_install_path/*" \
-								-path "*/foopak_meta/*" \
-								-name command_list.conf \
-				-exec	grep --with-filename -E "^$command\s" {} + \
-					|		sed "s/$escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
-			)
+			conflicting_module=$(locate_command --print-module --exclude-dir "$module_install_path" "$command")
 
 			if [ -n "$conflicting_module" ]; then
 				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
@@ -226,12 +290,8 @@ add() {
 exec_module_command() {
 	command_name=$1; shift
 
-	# TODO cache command list
-	command_script=$( \
-					find "$project_root/foopak_modules" -path '*/foopak_meta/*' -name command_list.conf \
-		-exec	grep --with-filename -E "^$command_name\s" {} + \
-			|		sed "s/foopak_meta\/command_list\.conf.*\s//" \
-	)
+	# TODO cache command
+	command_script=$(locate_command --absolute-path "$command_name")
 
 	if [ -z "$command_script" ]; then
 		echo "ERROR: unknown command '$command_name'" >&2
@@ -249,6 +309,10 @@ case "$command" in
 
 	add|a)
 		add $@
+	;;
+
+	locate-cmd)
+		locate_command $@
 	;;
 
 	*)
