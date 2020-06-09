@@ -5,17 +5,17 @@ project_root=$(realpath "$(dirname $0)/../..")
 oneTimeSetUp() {
 	environment_dir=$("$project_root/tests/setup_environment.sh")
 	cd $environment_dir
-	mkdir -p foopak_modules
+	mkdir -p custom_dir
 
 	git submodule add \
 		https://github.com/rockerbacon/foopak-mock-module \
-		foopak_modules/rockerbacon/foopak-mock-module \
+		custom_dir/rockerbacon/foopak-mock-module \
 	&> /dev/null
 
 	echo "unrelated_change" >> .gitignore
 	touch unrelated_file
 
-	output=$(./foopak remove rockerbacon/foopak-mock-module 2>&1); \
+	output=$(./foopak remove --dir custom_dir rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
 
 	working_tree_state=$(git status)
@@ -35,8 +35,8 @@ test_should_execute_successfuly() {
 
 test_should_remove_module_folder() {
 	assertFalse \
-		"did not remove 'foopak_modules/rockerbacon/foopak-mock-module'." \
-		"[ -d foopak_modules/rockerbacon/foopak-mock-module ]"
+		"did not remove 'custom_dir/rockerbacon/foopak-mock-module'." \
+		"[ -d custom_dir/rockerbacon/foopak-mock-module ]"
 }
 
 test_should_remove_module_from_gitmodules() {
@@ -65,7 +65,7 @@ test_should_remove_module_from_the_working_tree() {
 	assertNotContains \
 		"working tree has module related changes:\n$working_tree_state\n\n" \
 		"$working_tree_state" \
-		"foopak_modules"
+		"custom_dir"
 
 	assertNotContains \
 		"working tree has module related changes:\n$working_tree_state\n\n" \

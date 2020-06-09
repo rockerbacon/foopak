@@ -41,6 +41,12 @@ OPTIONS:
 	--tag,-t,	use specific tag or commit
 	--commit,-c	default is the latest commit in the default remote
 
+	--dir,-d	add module under different directory
+			default is foopak_modules
+			WARNING:
+				modules outside 'foopak_modules'
+				will not be scanned for commands
+
 	--branch,-b	use specific branch
 			default is the default remote branch
 
@@ -51,6 +57,7 @@ EOF
 
 fpf_remove() {
 	###    DEFAULTS    ###
+	modules_relative_dir="foopak_modules"
 	###    DEFAULTS    ###
 
 	###    READ NAMED ARGS    ###
@@ -58,6 +65,10 @@ fpf_remove() {
 	while [ "$reading_named_args" == "true" ]; do
 		option=$1
 		case "$option" in
+			--dir|-d)
+				modules_relative_dir=$2; shift 2
+			;;
+
 			--help|-h)
 				fpp_print_remove_help
 				exit 0
@@ -87,7 +98,9 @@ fpf_remove() {
 	fi
 	###    READ POSITIONAL ARGS    ###
 
-	module_install_path="$fpv_modules_dir/$module_alias"
+	modules_dir="$fpv_project_root/$modules_relative_dir"
+
+	module_install_path="$modules_dir/$module_alias"
 
 	if [ ! -d "$module_install_path" ]; then
 		echo "ERROR: module '$module_alias' not installed" >&2
@@ -103,6 +116,7 @@ fpf_remove() {
 fpf_add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
+	modules_relative_dir="foopak_modules"
 	module_options=()
 	###   DEFAULTS   ###
 
@@ -121,6 +135,10 @@ fpf_add() {
 
 			--commit|-c|--tag|-t)
 				module_version=$2; shift 2
+			;;
+
+			--dir|-d)
+				modules_relative_dir=$2; shift 2
 			;;
 
 			--help|-h)
@@ -155,12 +173,14 @@ fpf_add() {
 	fi
 	###   READ POSITIONAL ARGS    ###
 
+	modules_dir="$fpv_modules_dir/$modules_relative_dir"
+
 	module_parent_dir=$(dirname "$module_alias")
 	if [ "${module_parent_dir:0:1}" != "." ]; then
-		mkdir -p "$fpv_modules_dir/$module_parent_dir"
+		mkdir -p "$modules_dir/$module_parent_dir"
 	fi
 
-	module_install_path="$fpv_relative_modules_dir/$module_alias"
+	module_install_path="$modules_relative_dir/$module_alias"
 
 	if [ -e "$module_install_path" ]; then
 		echo "ERROR: could not add module: directory '$module_install_path' already exists" >&2
