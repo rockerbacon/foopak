@@ -50,7 +50,7 @@ EOF
 
 remove() {
 	###    DEFAULTS    ###
-	modules_relative_dir="foopak_modules"
+	module_home_relative_dir="foopak_modules"
 	###    DEFAULTS    ###
 
 	###    READ NAMED ARGS    ###
@@ -59,7 +59,7 @@ remove() {
 		option=$1
 		case "$option" in
 			--dir|-d)
-				modules_relative_dir=$2; shift 2
+				module_home_relative_dir=$2; shift 2
 			;;
 
 			--help|-h)
@@ -90,9 +90,9 @@ remove() {
 		exit 1
 	fi
 	###    READ POSITIONAL ARGS    ###
-	modules_dir="$project_root/$modules_relative_dir"
+	module_home_dir="$project_root/$module_home_relative_dir"
 
-	module_relative_dir="$modules_relative_dir/$module_alias"
+	module_relative_dir="$module_home_relative_dir/$module_alias"
 	module_dir="$project_root/$module_relative_dir"
 
 	if [ ! -d "$module_dir" ]; then
@@ -110,7 +110,7 @@ remove() {
 add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
-	modules_relative_dir="foopak_modules"
+	module_home_relative_dir="foopak_modules"
 	module_options=()
 	###   DEFAULTS   ###
 
@@ -132,7 +132,7 @@ add() {
 			;;
 
 			--dir|-d)
-				modules_relative_dir=$2; shift 2
+				module_home_relative_dir=$2; shift 2
 			;;
 
 			--help|-h)
@@ -167,14 +167,14 @@ add() {
 	fi
 	###   READ POSITIONAL ARGS    ###
 
-	modules_dir="$project_root/$modules_relative_dir"
+	module_home_dir="$project_root/$module_home_relative_dir"
 
 	module_parent_dir=$(dirname "$module_alias")
 	if [ "${module_parent_dir:0:1}" != "." ]; then
 		mkdir -p "$project_root/$module_parent_dir"
 	fi
 
-	module_install_path="$modules_relative_dir/$module_alias"
+	module_install_path="$module_home_relative_dir/$module_alias"
 
 	if [ -e "$module_install_path" ]; then
 		echo "ERROR: could not add module: directory '$module_install_path' already exists" >&2
