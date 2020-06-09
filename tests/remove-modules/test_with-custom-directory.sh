@@ -50,7 +50,7 @@ test_should_remove_module_from_gitmodules() {
 test_should_remove_module_from_cache() {
 	assertFalse \
 		"module still cached in '.git/modules'" \
-		"[ -d .git/modules/rockerbacon/foopak-mock-module ]"
+		"[ -d .git/modules/custom_dir/rockerbacon/foopak-mock-module ]"
 }
 
 test_should_remove_module_from_config() {
