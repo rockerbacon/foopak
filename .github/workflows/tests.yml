@@ -1,0 +1,28 @@
+name: tests
+
+on:
+  pull_request:
+    branches:
+      - v1
+      - master
+      - architecture
+
+jobs:
+  all-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: set git email
+        run: git config user.email ci@foopak.org
+
+      - name: set git user
+        run: git config user.name foopak_ci
+
+      - name: run all tests
+        run: ./test_all.sh
+
