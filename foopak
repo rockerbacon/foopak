@@ -9,7 +9,7 @@ cat >&2 << EOF
 Usage: ./foopak remove [OPTIONS...] MODULE
 Remove module located in path 'foopak_modules/MODULE'
 
-MODULE:		module to remove" >&2
+MODULE:		module to remove
 		use './foopak list' to see all installed modules
 
 OPTIONS:

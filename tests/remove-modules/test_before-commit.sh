@@ -7,10 +7,10 @@ oneTimeSetUp() {
 	cd $environment_dir
 	mkdir -p foopak_modules
 
-	git submodule add \
+	submodule_add_output=$(git submodule add \
 		https://github.com/rockerbacon/foopak-mock-module \
-		foopak_modules/rockerbacon/foopak-mock-module \
-	&> /dev/null
+		foopak_modules/rockerbacon/foopak-mock-module 2>&1
+	); submodule_add_status=$?
 
 	echo "unrelated_change" >> .gitignore
 	touch unrelated_file
@@ -31,6 +31,13 @@ test_should_execute_successfuly() {
 		"exited with error:\n$output\n\n" \
 		0 \
 		$exit_code
+}
+
+test_should_successfuly_add_module_during_setup() {
+	assertEquals \
+		"exited with error:\n$submodule_add_output\n\n" \
+		0 \
+		$submodule_add_status
 }
 
 test_should_remove_module_folder() {
