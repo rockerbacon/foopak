@@ -1,17 +1,10 @@
 #!/bin/bash
 
-fpv_project_root=$(realpath $(dirname $0))
+project_root=$(realpath $(dirname $0))
 
-fpv_relative_modules_dir=foopak_modules
+escaped_project_root=$(echo "$project_root" | sed 's/\//\\\//g')
 
-fpv_modules_dir="$fpv_project_root/$fpv_relative_modules_dir"
-
-fpv_escaped_project_root=$(echo "$fpv_project_root" | sed 's/\//\\\//g')
-fpv_escaped_modules_dir=$(echo "$fpv_modules_dir" | sed 's/\//\\\//g')
-
-mkdir -p "$fpv_modules_dir"
-
-fpp_print_remove_help() {
+print_remove_help() {
 cat >&2 << EOF
 Usage: ./foopak remove [OPTIONS...] MODULE
 Remove module located in path 'foopak_modules/MODULE'
@@ -24,7 +17,7 @@ OPTIONS:
 EOF
 }
 
-fpp_print_add_help() {
+print_add_help() {
 cat >&2 << EOF
 Usage: ./foopak add [OPTIONS...] MODULE
 Add module located in path MODULE from a git server to the project
@@ -55,9 +48,78 @@ OPTIONS:
 EOF
 }
 
-fpf_remove() {
+locate_command() {
+	if [ ! -d "$project_root/foopak_modules" ]; then
+		return 0
+	fi
+
 	###    DEFAULTS    ###
-	modules_relative_dir="foopak_modules"
+	extra_tests=()
+	output_mode="script"
+	relative_path=true
+	###    DEFAULTS    ###
+
+	###    READ NAMED ARGS    ###
+	reading_named_args=true
+	while [ "$reading_named_args" == "true" ]; do
+		option=$1
+		case "$option" in
+			--exclude-dir)
+				extra_tests+=("-not -path '$project_root/$2/*'"); shift 2
+			;;
+
+			--absolute-path)
+				relative_path=false; shift 1
+			;;
+
+			--print-module)
+				output_mode="module"; shift 1
+			;;
+
+			--*|-*)
+				echo "ERROR: unknown option '$option'" >&2
+			;;
+
+			*)
+				reading_named_args=false
+			;;
+		esac
+	done
+	###    READ NAMED ARGS    ###
+
+	###    READ POSITIONAL ARGS    ###
+	command_name=$1; shift
+	###    READ POSITIONAL ARGS    ###
+
+	find_query=" \
+					find '$project_root/foopak_modules' \
+						${extra_tests[*]} \
+						-path '*/foopak_meta/*' \
+						-name command_list.conf \
+		-exec	grep --with-filename -E '^$command_name\s' {} + \
+	"
+	command_location=$(bash -c "$find_query")
+
+	if [ "$relative_path" == "true" ]; then
+		command_location=$(echo "$command_location" | sed "s/$escaped_project_root\/foopak_modules\///")
+	fi
+
+	case "$output_mode" in
+		script)
+				echo "$command_location" \
+			|	sed "s/foopak_meta\/command_list\.conf.*\s//"
+		;;
+
+		module)
+				echo "$command_location" \
+			|	sed "s/\/foopak_meta.*$//"
+		;;
+	esac
+}
+
+remove() {
+	###    DEFAULTS    ###
+	module_home_relative_dir="foopak_modules"
 	###    DEFAULTS    ###
 
 	###    READ NAMED ARGS    ###
@@ -66,17 +128,18 @@ fpf_remove() {
 		option=$1
 		case "$option" in
 			--dir|-d)
-				modules_relative_dir=$2; shift 2
+				module_home_relative_dir=$2; shift 2
 			;;
 
 			--help|-h)
-				fpp_print_remove_help
+				print_remove_help
 				exit 0
 			;;
 
 			--*|-*)
 				echo "ERROR: Unknown option '$option'" >&2
-				echo; fpp_print_remove_help
+				echo >&2
+				print_remove_help >&2
 				exit 1
 			;;
 
@@ -93,30 +156,31 @@ fpf_remove() {
 	if [ -z "$module_alias" ]; then
 		echo "ERROR: please specify the module to remove" >&2
 		echo >&2
-		fpp_print_remove_help
+		print_remove_help
 		exit 1
 	fi
 	###    READ POSITIONAL ARGS    ###
+	module_home_dir="$project_root/$module_home_relative_dir"
 
-	modules_dir="$fpv_project_root/$modules_relative_dir"
+	module_relative_dir="$module_home_relative_dir/$module_alias"
+	module_dir="$project_root/$module_relative_dir"
 
-	module_install_path="$modules_dir/$module_alias"
-
-	if [ ! -d "$module_install_path" ]; then
+	if [ ! -d "$module_dir" ]; then
 		echo "ERROR: module '$module_alias' not installed" >&2
 		echo >&2
-		fpp_print_remove_help
+		print_remove_help
 		exit 1
 	fi
 
-	git submodule deinit -f "$module_install_path"
-	git rm -f "$module_install_path"
+	git submodule deinit -f "$module_dir"
+	git rm -f "$module_dir"
+	rm -rf "$project_root/.git/modules/$module_relative_dir"
 }
 
-fpf_add() {
+add() {
 	###   DEFAULTS    ###
 	git_server="https://github.com"
-	modules_relative_dir="foopak_modules"
+	module_home_relative_dir="foopak_modules"
 	module_options=()
 	###   DEFAULTS   ###
 
@@ -138,17 +202,18 @@ fpf_add() {
 			;;
 
 			--dir|-d)
-				modules_relative_dir=$2; shift 2
+				module_home_relative_dir=$2; shift 2
 			;;
 
 			--help|-h)
-				fpp_print_add_help
+				print_add_help
 				exit 0
 			;;
 
 			--*|-*)
 				echo "ERROR: Unknown option '$option'" >&2
-				echo; fpp_print_add_help
+				echo >&2
+				print_add_help >&2
 				exit 1
 			;;
 
@@ -164,7 +229,7 @@ fpf_add() {
 	if [ "$module_path" == "" ]; then
 		echo "ERROR: please specify a module to add" >&2
 		echo >&2
-		fpp_print_add_help
+		print_add_help
 		exit 1
 	fi
 
@@ -173,31 +238,31 @@ fpf_add() {
 	fi
 	###   READ POSITIONAL ARGS    ###
 
-	modules_dir="$fpv_modules_dir/$modules_relative_dir"
+	module_home_dir="$project_root/$module_home_relative_dir"
 
 	module_parent_dir=$(dirname "$module_alias")
 	if [ "${module_parent_dir:0:1}" != "." ]; then
-		mkdir -p "$modules_dir/$module_parent_dir"
+		mkdir -p "$project_root/$module_parent_dir"
 	fi
 
-	module_install_path="$modules_relative_dir/$module_alias"
+	module_install_path="$module_home_relative_dir/$module_alias"
 
 	if [ -e "$module_install_path" ]; then
 		echo "ERROR: could not add module: directory '$module_install_path' already exists" >&2
 		exit 1
 	fi
 
-	cd "$fpv_project_root"
+	cd "$project_root"
 	git submodule add ${module_options[@]} $git_server/$module_path "$module_install_path"
 
 	if [ -n "$module_version" ]; then
 		restore_workdir=$PWD
-		cd "$fpv_project_root/$module_install_path"
+		cd "$project_root/$module_install_path"
 			git checkout $module_version; exit_status=$?
 		cd "$restore_workdir"
 		if [ "$exit_status" != "0" ]; then
 			echo "ERROR: could not checkout version '$module_version', rolling back" >&2
-			fpf_remove "$module_alias"
+			remove "$module_alias"
 			exit 1
 		fi
 	fi
@@ -211,54 +276,47 @@ fpf_add() {
 
 			command=$(echo "$command" | sed "s/\s.*$//")
 
-			conflicting_module=$( \
-							find "$fpv_project_root/foopak_modules" \
-								-not -path "$fpv_project_root/$module_install_path/*" \
-								-path "*/foopak_meta/*" \
-								-name command_list.conf \
-				-exec	grep --with-filename -E "^$command\s" {} + \
-					|		sed "s/$fpv_escaped_project_root\/foopak_modules\///; s/\/foopak_meta.*$//" \
-			)
+			conflicting_module=$(locate_command --print-module --exclude-dir "$module_install_path" "$command")
 
 			if [ -n "$conflicting_module" ]; then
 				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
-				fpf_remove "$module_alias"
+				remove "$module_alias"
 				exit 1
 			fi
 		done
 	exec 3>&-
 }
 
-fpf_exec_module_command() {
+exec_module_command() {
 	command_name=$1; shift
 
-	# TODO cache command list
-	command_script=$( \
-					find "$fpv_project_root/foopak_modules" -path '*/foopak_meta/*' -name command_list.conf \
-		-exec	grep --with-filename -E "^$command_name\s" {} + \
-			|		sed "s/foopak_meta\/command_list\.conf.*\s//" \
-	)
+	# TODO cache command
+	command_script=$(locate_command --absolute-path "$command_name")
 
 	if [ -z "$command_script" ]; then
 		echo "ERROR: unknown command '$command_name'" >&2
 		exit 1
 	fi
 
-	. "$command_script" $@
+	"$command_script" $@
 }
 
 command=$1; shift
 case "$command" in
 	remove|r)
-		fpf_remove $@
+		remove $@
 	;;
 
 	add|a)
-		fpf_add $@
+		add $@
+	;;
+
+	locate-cmd)
+		locate_command $@
 	;;
 
 	*)
-		fpf_exec_module_command $command $@
+		exec_module_command $command $@
 	;;
 esac
 
