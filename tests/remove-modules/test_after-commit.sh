@@ -12,7 +12,7 @@ oneTimeSetUp() {
 		foopak_modules/rockerbacon/foopak-mock-module \
 	&> /dev/null
 
-	git commit -m "added mock module"
+	git commit -m "added mock module" &>/dev/null
 
 	echo "unrelated_change" >> .gitignore
 	touch unrelated_file
@@ -20,7 +20,7 @@ oneTimeSetUp() {
 	output=$(./foopak remove rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
 
-	working_tree_state=$(git status)
+	working_tree_state=$(git status 2>&1)
 }
 
 oneTimeTearDown() {
