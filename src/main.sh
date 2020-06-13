@@ -2,19 +2,19 @@ main() {
 	command=$1; shift
 	case "$command" in
 		remove|r)
-			remove $@
+			remove "$@"
 		;;
 
 		add|a)
-			add $@
+			add "$@"
 		;;
 
 		locate-cmd)
-			locate_cmd $@
+			locate_cmd "$@"
 		;;
 
 		*)
-			exec_module_cmd $command $@
+			exec_module_cmd "$command" "$@"
 		;;
 	esac
 }

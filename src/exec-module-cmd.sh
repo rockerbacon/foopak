@@ -9,6 +9,6 @@ exec_module_cmd() {
 		exit 1
 	fi
 
-	"$command_script" $@
+	"$command_script" "$@"
 }
 
