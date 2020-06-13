@@ -11,10 +11,10 @@ mkdir -p $(dirname "$output_file")
 
 build_list=( \
 	"$src_dir/constants.sh" \
-	"$src_dir/locate_command.sh" \
+	"$src_dir/locate-cmd.sh" \
 	"$src_dir/remove.sh" \
 	"$src_dir/add.sh" \
-	"$src_dir/exec_module_command.sh" \
+	"$src_dir/exec-module-cmd.sh" \
 	"$src_dir/main.sh" \
 )
 

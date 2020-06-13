@@ -128,7 +128,7 @@ add() {
 
 			command=$(echo "$command" | sed "s/\s.*$//")
 
-			conflicting_module=$(locate_command --print-module --exclude-dir "$module_install_path" "$command")
+			conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
 
 			if [ -n "$conflicting_module" ]; then
 				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2

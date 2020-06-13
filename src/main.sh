@@ -10,11 +10,11 @@ main() {
 		;;
 
 		locate-cmd)
-			locate_command $@
+			locate_cmd $@
 		;;
 
 		*)
-			exec_module_command $command $@
+			exec_module_cmd $command $@
 		;;
 	esac
 }
