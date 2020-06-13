@@ -15,5 +15,8 @@ environment_dir=$(mktemp -d /tmp/foopak_test_environments/XXXXXX)
 
 cp -R "$project_root"/* "$project_root"/.[!.]* $environment_dir/
 
+"$environment_dir"/build.sh
+mv "$environment_dir/build/foopak" "$environment_dir/foopak"
+
 echo "$environment_dir"
 
