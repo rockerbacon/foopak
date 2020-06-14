@@ -14,9 +14,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: check indentation
-        run: >-
-          ./check_indentation.sh $(find ./
-            -not -path './shunit2/*'
-            -name '*.sh'
+        run: |-
+          ./check_indentation.sh $(find ./ \
+            -not -path './shunit2/*' \
+            -name '*.sh' \
           )
 
