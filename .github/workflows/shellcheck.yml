@@ -13,9 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: change working directory
-        run: cd src/
-
       - name: shellcheck
         run: shellcheck *
+        working-directory: src/
 
