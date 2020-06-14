@@ -1,0 +1,22 @@
+name: formatting
+
+on:
+  pull_request:
+    branches:
+      - v1
+      - master
+      - architecture
+
+jobs:
+  indentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: check indentation
+        run: |-
+          ./check_indentation.sh $(find ./
+            -not -path './shunit2/*'
+            -name '*.sh'
+          )
+
