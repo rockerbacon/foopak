@@ -119,23 +119,27 @@ add() {
 		fi
 	fi
 
-	exec 3< "$module_install_path/foopak_meta/command_list.conf"
-		command_list_version=$(read -u 3)
+	command_list="$module_install_path/foopak_meta/command_list.conf"
 
-		while read -u 3 command || [ -n "$command" ]; do
-			[ -z "$command" ] && continue
-			[ "${command:0:1}" == "#" ] && continue
+	if [ -f "$command_list" ]; then
+		exec 3< "$command_list"
+			command_list_version=$(read -u 3)
 
-			command=$(echo "$command" | sed "s/\s.*$//")
+			while read -u 3 command || [ -n "$command" ]; do
+				[ -z "$command" ] && continue
+				[ "${command:0:1}" == "#" ] && continue
 
-			conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
+				command=$(echo "$command" | sed "s/\s.*$//")
 
-			if [ -n "$conflicting_module" ]; then
-				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
-				remove "$module_alias"
-				exit 1
-			fi
-		done
-	exec 3>&-
+				conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
+
+				if [ -n "$conflicting_module" ]; then
+					echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
+					remove "$module_alias"
+					exit 1
+				fi
+			done
+		exec 3>&-
+	fi
 }
 
