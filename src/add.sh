@@ -1,8 +1,3 @@
-#!/bin/bash
-
-source constants.sh
-source remove.sh
-
 print_add_help() {
 cat >&2 << EOF
 Usage: ./foopak add [OPTIONS...] MODULE
@@ -95,6 +90,8 @@ add() {
 	fi
 	###   READ POSITIONAL ARGS    ###
 
+	module_home_dir="$project_root/$module_home_relative_dir"
+
 	module_parent_dir=$(dirname "$module_alias")
 	if [ "${module_parent_dir:0:1}" != "." ]; then
 		mkdir -p "$project_root/$module_parent_dir"
@@ -107,14 +104,14 @@ add() {
 		exit 1
 	fi
 
-	cd "$project_root" || exit 1
-	git submodule add "${module_options[@]}" "$git_server/$module_path" "$module_install_path"
+	cd "$project_root"
+	git submodule add ${module_options[@]} $git_server/$module_path "$module_install_path"
 
 	if [ -n "$module_version" ]; then
 		restore_workdir=$PWD
-		cd "$project_root/$module_install_path" || exit 1
-			git checkout "$module_version"; exit_status=$?
-		cd "$restore_workdir" || exit 1
+		cd "$project_root/$module_install_path"
+			git checkout $module_version; exit_status=$?
+		cd "$restore_workdir"
 		if [ "$exit_status" != "0" ]; then
 			echo "ERROR: could not checkout version '$module_version', rolling back" >&2
 			remove "$module_alias"
@@ -122,25 +119,29 @@ add() {
 		fi
 	fi
 
-	exec 3< "$module_install_path/foopak_meta/command_list.conf"
-		# this might be useful later if the file standard changes
-		# shellcheck disable=SC2034
-		command_list_version=$(read -ru 3)
+	command_list="$module_install_path/foopak_meta/command_list.conf"
 
-		while read -ru 3 command || [ -n "$command" ]; do
-			[ -z "$command" ] && continue
-			[ "${command:0:1}" == "#" ] && continue
+	if [ -f "$command_list" ]; then
+		exec 3< "$command_list"
+			# this might be useful later if the file standard changes
+			# shellcheck disable=SC2034
+			command_list_version=$(read -u 3)
 
-			command=${command/\ */}
+			while read -u 3 command || [ -n "$command" ]; do
+				[ -z "$command" ] && continue
+				[ "${command:0:1}" == "#" ] && continue
 
-			conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
+				command=$(echo "$command" | sed "s/\s.*$//")
 
-			if [ -n "$conflicting_module" ]; then
-				echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
-				remove "$module_alias"
-				exit 1
-			fi
-		done
-	exec 3>&-
+				conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
+
+				if [ -n "$conflicting_module" ]; then
+					echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
+					remove "$module_alias"
+					exit 1
+				fi
+			done
+		exec 3>&-
+	fi
 }
 
