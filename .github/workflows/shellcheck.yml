@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: build
-        run: ./build.sh
+      - name: change working directory
+        run: cd src/
 
       - name: shellcheck
-        run: shellcheck build/foopak
+        run: shellcheck *
 
