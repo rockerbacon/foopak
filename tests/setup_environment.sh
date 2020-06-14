@@ -14,13 +14,12 @@ mkdir -p /tmp/foopak_test_environments
 test_environment=$(mktemp -d /tmp/foopak_test_environments/XXXXXX)
 
 reset_environment() {
-	rm -rf "$test_environment"/* "$test_environment"/.[!.]*
+	make --directory "$dev_environment"
 
-	ls "$test_environment/"
+	rm -rf "$test_environment"/* "$test_environment"/.[!.]*
 
 	cp -R "$dev_environment"/* "$dev_environment"/.[!.]* $test_environment/
 
-	"$test_environment"/build.sh
 	mv -f "$test_environment/build/foopak" "$test_environment/foopak"
 }
 
