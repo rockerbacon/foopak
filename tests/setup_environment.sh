@@ -1,22 +1,34 @@
 #!/bin/bash
 
-script_dir=$(realpath $(dirname $0))
-project_root=$(realpath "$script_dir/..")
+script_dir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+dev_environment=$(realpath "$script_dir/..")
 
-project_root_owner=$(stat --format=%U "$project_root")
+dev_environment_owner=$(stat --format=%U "$dev_environment")
 
-if [ "$project_root_owner" != "$USER" ]; then
-	echo "ERROR: user '$USER' does not own the project root located in '$project_root'" >&2
+if [ "$dev_environment_owner" != "$USER" ]; then
+	echo "ERROR: user '$USER' does not own the project root located in '$dev_environment'" >&2
 	return 1
 fi
 
 mkdir -p /tmp/foopak_test_environments
-environment_dir=$(mktemp -d /tmp/foopak_test_environments/XXXXXX)
+test_environment=$(mktemp -d /tmp/foopak_test_environments/XXXXXX)
 
-cp -R "$project_root"/* "$project_root"/.[!.]* $environment_dir/
+reset_environment() {
+	rm -rf "$test_environment"/* "$test_environment"/.[!.]*
 
-"$environment_dir"/build.sh
-mv "$environment_dir/build/foopak" "$environment_dir/foopak"
+	ls "$test_environment/"
 
-echo "$environment_dir"
+	cp -R "$dev_environment"/* "$dev_environment"/.[!.]* $test_environment/
+
+	"$test_environment"/build.sh
+	mv -f "$test_environment/build/foopak" "$test_environment/foopak"
+}
+
+teardown_environment() {
+	cd "$dev_environment"
+	rm -rf "$test_environment"
+}
+
+reset_environment
+cd "$test_environment"
 

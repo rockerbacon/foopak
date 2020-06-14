@@ -3,8 +3,7 @@
 project_root=$(realpath "$(dirname $0)/../..")
 
 oneTimeSetUp() {
-	environment_dir=$("$project_root/tests/setup_environment.sh")
-	cd $environment_dir
+	source "$project_root/tests/setup_environment.sh"
 	mkdir -p custom_dir
 
 	submodule_add_output=$(git submodule add \
@@ -22,8 +21,7 @@ oneTimeSetUp() {
 }
 
 oneTimeTearDown() {
-	cd "$project_root"
-	rm -rf $environment_dir
+	teardown_environment
 }
 
 test_should_execute_successfuly() {

@@ -3,8 +3,7 @@
 project_root=$(realpath "$(dirname $0)/../..")
 
 oneTimeSetUp() {
-	environment_dir=$("$project_root/tests/setup_environment.sh")
-	cd $environment_dir
+	source "$project_root/tests/setup_environment.sh"
 	output=$(./foopak add --dir "test_modules/subdir" rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
 
@@ -12,8 +11,7 @@ oneTimeSetUp() {
 }
 
 oneTimeTearDown() {
-	cd "$project_root"
-	rm -rf $environment_dir
+	teardown_environment
 }
 
 test_should_execute_without_errors() {
