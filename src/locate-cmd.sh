@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 print_locate_cmd_help() {
 cat >&2 <<EOF
 Usage: ./foopak locate-cmd [OPTIONS...] COMMAND

@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 main() {
 	command=$1; shift
 	case "$command" in

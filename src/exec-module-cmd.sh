@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 exec_module_cmd() {
 	command_name=$1; shift
 

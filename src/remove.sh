@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 print_remove_help() {
 cat >&2 << EOF
 Usage: ./foopak remove [OPTIONS...] MODULE
@@ -54,8 +56,6 @@ remove() {
 		exit 1
 	fi
 	###    READ POSITIONAL ARGS    ###
-	module_home_dir="$project_root/$module_home_relative_dir"
-
 	module_relative_dir="$module_home_relative_dir/$module_alias"
 	module_dir="$project_root/$module_relative_dir"
 
