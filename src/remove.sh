@@ -1,4 +1,6 @@
-# shellcheck shell=bash
+#!/bin/bash
+
+source constants.sh
 
 print_remove_help() {
 cat >&2 << EOF

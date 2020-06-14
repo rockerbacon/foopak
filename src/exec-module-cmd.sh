@@ -1,4 +1,6 @@
-# shellcheck shell=bash
+#!/bin/bash
+
+source locate-cmd.sh
 
 exec_module_cmd() {
 	command_name=$1; shift

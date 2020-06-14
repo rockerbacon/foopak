@@ -1,5 +1,5 @@
-# shellcheck shell=bash
+#!/bin/bash
 
-project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
-escaped_project_root=$(echo "$project_root" | sed 's/\//\\\//g')
+export project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+export escaped_project_root=$(echo "$project_root" | sed 's/\//\\\//g')
 
