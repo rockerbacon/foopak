@@ -11,6 +11,9 @@ MODULE:		module to remove
 		use './foopak list' to see all installed modules
 
 OPTIONS:
+	--dir,-d	remove module under different directory
+			default is foopak_modules
+
 	--help,-h	print this help message and exit
 EOF
 }
