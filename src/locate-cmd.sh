@@ -21,8 +21,6 @@ OPTIONS:
 			instead of the path to the script
 			which implements the command
 
-	--debug,-d	print debug information
-
 	--help,-h	print this help message and exit
 EOF
 }
@@ -41,10 +39,6 @@ locate_cmd() {
 		case "$option" in
 			--absolute-path)
 				relative_path=false; shift 1
-			;;
-
-			--debug|-d)
-				debug=true; shift 1
 			;;
 
 			--exclude-dir)
@@ -90,8 +84,7 @@ locate_cmd() {
 	"
 	command_location=$(bash -c "$find_query")
 
-	if [ -z "$command_location" ] && [ "$debug" == "true" ]; then
-		echo "DEBUG: could not find command" >&2
+	if [ -z "$command_location" ]; then
 		exit 0
 	fi
 
