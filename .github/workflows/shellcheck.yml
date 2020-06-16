@@ -19,7 +19,7 @@ jobs:
       <<: *base-steps
 
       - name: shellcheck source scripts
-        run: ./run_shellcheck.sh src
+        run: ./ci/shellcheck.sh src
 
   shellcheck-tests:
     <<: *base-job
@@ -27,7 +27,7 @@ jobs:
       <<: *base-steps
 
       - name: shellcheck test scripts
-        run: ./run_shellcheck.sh tests
+        run: ./ci/shellcheck.sh tests
 
   shellcheck-ci:
     <<: *base-job
@@ -35,5 +35,5 @@ jobs:
       <<: *base-steps
 
       - name: shellcheck ci scripts
-        run: ./run_shellcheck.sh ci
+        run: ./ci/shellcheck.sh ci
 
