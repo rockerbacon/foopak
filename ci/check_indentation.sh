@@ -1,6 +1,6 @@
 #!/bin/bash
 
-project_root=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/..")
 
 check_indentation() {
 	file=$1
@@ -17,6 +17,9 @@ check_indentation() {
 
 	return 0
 }
+
+echo
+echo "######## CHECKING INDENTATION ########"
 
 failure=$(
 	find "$project_root" \
@@ -35,4 +38,6 @@ if [ -n "$failure" ]; then
 fi
 
 echo "Everything looks fine"
+
+echo "######## CHECKING INDENTATION ########"
 
