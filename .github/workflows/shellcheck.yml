@@ -7,32 +7,27 @@ on:
       - master
       - architecture
 
-base-job: &base-job
+defaults:
   runs-on: ubuntu-latest
-  steps: &base-steps
-    - uses: actions/checkout@v2
 
 jobs:
   shellcheck-src:
-    <<: *base-job
     steps:
-      - *base-steps
+      - uses: actions/checkout@v2
 
       - name: shellcheck source scripts
         run: ./ci/shellcheck.sh src
 
   shellcheck-tests:
-    <<: *base-job
     steps:
-      - *base-steps
+      - uses: actions/checkout@v2
 
       - name: shellcheck test scripts
         run: ./ci/shellcheck.sh tests
 
   shellcheck-ci:
-    <<: *base-job
     steps:
-      - *base-steps
+      - uses: actions/checkout@v2
 
       - name: shellcheck ci scripts
         run: ./ci/shellcheck.sh ci
