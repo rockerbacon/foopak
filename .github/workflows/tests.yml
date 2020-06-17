@@ -24,5 +24,5 @@ jobs:
         run: git config user.name foopak_ci
 
       - name: run all tests
-        run: ./test_all.sh
+        run: ./ci/tests.sh
 

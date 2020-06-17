@@ -8,12 +8,27 @@ on:
       - architecture
 
 jobs:
-  shellcheck:
+  shellcheck-src:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
-      - name: shellcheck
-        run: shellcheck *
-        working-directory: src/
+      - name: shellcheck source scripts
+        run: ./ci/shellcheck.sh src
+
+  shellcheck-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: shellcheck test scripts
+        run: ./ci/shellcheck.sh tests
+
+  shellcheck-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: shellcheck ci scripts
+        run: ./ci/shellcheck.sh ci
 
