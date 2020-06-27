@@ -131,11 +131,12 @@ add() {
 			# shellcheck disable=SC2034
 			command_list_version=$(read -ru 3)
 
-			while read -ru 3 command || [ -n "$command" ]; do
-				[ -z "$command" ] && continue
-				[ "${command:0:1}" == "#" ] && continue
+			while read -ru 3 command_config || [ -n "$command_config" ]; do
+				[ -z "$command_config" ] && continue
+				[ "${command_config:0:1}" == "#" ] && continue
 
-				command=${command/\ */}
+				command=${command_config%%[[:space:]]*}
+				echo "$command" >&2
 
 				conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
 

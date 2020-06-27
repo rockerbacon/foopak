@@ -2,7 +2,7 @@ BUILD_DIR=build
 
 .PHONY: clean
 
-default: $(BUILD_DIR)/foopak
+foopak: $(BUILD_DIR)/foopak
 
 $(BUILD_DIR):
 	mkdir $(BUILD_DIR)

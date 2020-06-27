@@ -82,25 +82,36 @@ locate_cmd() {
 						-name command_list.conf \
 		-exec	grep --with-filename -E '^$command_name\s' {} + \
 	"
-	command_location=$(bash -c "$find_query")
+	command_config_line=$(bash -c "$find_query")
 
-	if [ -z "$command_location" ]; then
+	if [ -z "$command_config_line" ]; then
 		exit 0
 	fi
 
+	config_file=${command_config_line%%:*}
+	config=(${command_config_line#*:})
+
+	module_dir=$(realpath "$(dirname "$config_file")/../")
 	if [ "$relative_path" == "true" ]; then
-		command_location=$(echo "$command_location" | sed "s/$escaped_project_root\/foopak_modules\///")
+		module_dir=${module_dir#$project_root/foopak_modules/}
 	fi
 
 	case "$output_mode" in
 		script)
-				echo "$command_location" \
-			|	sed "s/foopak_meta\/command_list\.conf.*\s//"
+			command_type=${config[1]}
+			case "$command_type" in
+				_alias_)
+					echo "'${BASH_SOURCE[0]}' ${config[2]}"
+				;;
+
+				*)
+					echo "$module_dir/$command_type"
+				;;
+			esac
 		;;
 
 		module)
-				echo "$command_location" \
-			|	sed "s/\/foopak_meta.*$//"
+			echo "$module_dir"
 		;;
 	esac
 }
