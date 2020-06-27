@@ -1,8 +1,9 @@
 #!/bin/bash
 
-project_root=$(realpath "$(dirname $0)/../..")
+project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 
 oneTimeSetUp() {
+	# shellcheck source=./tests/setup_environment.sh
 	source "$project_root/tests/setup_environment.sh"
 	mkdir -p custom_dir
 
@@ -92,5 +93,6 @@ test_should_not_remove_unrelated_untracked_files_from_the_working_tree() {
 		"unrelated_file"
 }
 
+# shellcheck disable=SC1090
 . "$project_root/shunit2/shunit2"
 
