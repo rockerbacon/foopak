@@ -7,7 +7,7 @@ specific=$1
 check_src() {
 	{
 		cd "$project_root/src" || exit 1
-		shellcheck ./*
+		shellcheck -x ./*
 	}
 	src_exit=$?
 }
@@ -15,7 +15,7 @@ check_src() {
 check_tests() {
 	{
 		cd "$project_root" || exit 1
-		find "./tests/" -name '*.sh' -exec shellcheck {} +
+		find "./tests/" -name '*.sh' -exec shellcheck -x {} +
 	}
 	tests_exit=$?
 }
@@ -23,7 +23,7 @@ check_tests() {
 check_ci() {
 	{
 		cd "$project_root" || exit 1
-		find "./ci" -maxdepth 1 -name '*.sh' -exec shellcheck {} +
+		find "./ci" -maxdepth 1 -name '*.sh' -exec shellcheck -x {} +
 	}
 	ci_exit=$?
 }
