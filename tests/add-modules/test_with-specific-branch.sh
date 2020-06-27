@@ -1,8 +1,9 @@
 #!/bin/bash
 
-project_root=$(realpath "$(dirname $0)/../..")
+project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 
 oneTimeSetUp() {
+	# shellcheck source=./tests/setup_environment.sh
 	source "$project_root/tests/setup_environment.sh"
 	output=$(./foopak add --branch v3 rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
@@ -47,5 +48,6 @@ test_should_add_module_using_relative_path() {
 		"$project_root"
 }
 
+# shellcheck disable=SC1090
 . "$project_root/shunit2/shunit2"
 

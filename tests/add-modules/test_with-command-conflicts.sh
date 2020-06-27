@@ -1,8 +1,9 @@
 #!/bin/bash
 
-project_root=$(realpath "$(dirname $0)/../..")
+project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 
 oneTimeSetUp() {
+	# shellcheck source=./tests/setup_environment.sh
 	source "$project_root/tests/setup_environment.sh"
 	./foopak add rockerbacon/foopak-mock-module 2>/dev/null 1>/dev/null
 	output=$(./foopak add --alias 'mock-alias' rockerbacon/foopak-mock-module 2>&1); \
@@ -52,5 +53,6 @@ test_should_not_rollback_unrelated_modules() {
 		"rockerbacon/foopak-mock-module"
 }
 
+# shellcheck disable=SC1090
 . "$project_root/shunit2/shunit2"
 
