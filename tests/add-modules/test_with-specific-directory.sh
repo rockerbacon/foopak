@@ -5,7 +5,7 @@ project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 oneTimeSetUp() {
 	# shellcheck source=./tests/setup_environment.sh
 	source "$project_root/tests/setup_environment.sh"
-	output=$(./foopak add --dir "test_modules/subdir" rockerbacon/foopak-mock-module 2>&1); \
+	output=$(./foopak add --dir "test_modules/subdir" --server "$project_root/mocks" foopak-mock-module.git 2>&1); \
 		exit_code=$?
 
 	gitmodules_content=$(cat .gitmodules)
@@ -21,8 +21,8 @@ test_should_execute_without_errors() {
 
 test_should_add_module_in_correct_path() {
 	assertTrue \
-		"path 'test_modules/subdir/rockerbacon/foopak-mock-module' not found" \
-		'[ -d "test_modules/subdir/rockerbacon/foopak-mock-module" ]'
+		"path 'test_modules/subdir/foopak-mock-module.git' not found" \
+		'[ -d "test_modules/subdir/foopak-mock-module.git" ]'
 }
 
 test_should_not_be_able_to_execute_scripts_in_module_root() {
@@ -50,14 +50,14 @@ test_should_add_module_as_git_module() {
 	assertContains \
 		"module not correctly added to .gitmodules:\n$output\n\n$gitmodules_content\n\n" \
 		"$gitmodules_content" \
-		"test_modules/subdir/rockerbacon/foopak-mock-module"
+		"test_modules/subdir/foopak-mock-module.git"
 }
 
 test_should_add_module_using_relative_path() {
 	assertNotContains \
 		".gitmodules contains module added with absolute path:\n$output\n\n$gitmodules_content\n\n" \
 		"$gitmodules_content" \
-		"$project_root"
+		"path = $project_root"
 }
 
 # shellcheck disable=SC1090
