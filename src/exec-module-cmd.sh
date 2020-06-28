@@ -6,13 +6,19 @@ exec_module_cmd() {
 	command_name=$1; shift
 
 	# TODO cache command
-	command_script=$(locate_cmd --absolute-path "$command_name")
+	locate_output=$(locate_cmd "$command_name")
+	found_command=$?
 
-	if [ -z "$command_script" ]; then
+	if [ "$found_command" == "1" ]; then
 		echo "ERROR: unknown command '$command_name'" >&2
-		exit 1
+		return 1
 	fi
 
-	"$command_script" "$@"
+	declare -A command_config="$locate_output"
+	declare -a cmd="${command_config[cmd]}"
+
+
+	module_root="${command_config[1]}" "${cmd[@]}" "$@"
+	return $?
 }
 

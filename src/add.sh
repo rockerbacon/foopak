@@ -65,14 +65,14 @@ add() {
 
 			--help|-h)
 				print_add_help
-				exit 0
+				return 0
 			;;
 
 			--*|-*)
 				echo "ERROR: Unknown option '$option'" >&2
 				echo >&2
 				print_add_help >&2
-				exit 1
+				return 1
 			;;
 
 			*)
@@ -88,7 +88,7 @@ add() {
 		echo "ERROR: please specify a module to add" >&2
 		echo >&2
 		print_add_help
-		exit 1
+		return 1
 	fi
 
 	if [ -z "$module_alias" ]; then
@@ -105,21 +105,21 @@ add() {
 
 	if [ -e "$module_install_path" ]; then
 		echo "ERROR: could not add module: directory '$module_install_path' already exists" >&2
-		exit 1
+		return 1
 	fi
 
-	cd "$project_root" || exit 1
+	cd "$project_root" || return 1
 	git submodule add "${module_options[@]}" "$git_server/$module_path" "$module_install_path"
 
 	if [ -n "$module_version" ]; then
 		restore_workdir=$PWD
-		cd "$project_root/$module_install_path" || exit 1
+		cd "$project_root/$module_install_path" || return 1
 			git checkout "$module_version"; exit_status=$?
-		cd "$restore_workdir" || exit 1
+		cd "$restore_workdir" || return 1
 		if [ "$exit_status" != "0" ]; then
 			echo "ERROR: could not checkout version '$module_version', rolling back" >&2
 			remove "$module_alias"
-			exit 1
+			return 1
 		fi
 	fi
 
@@ -135,14 +135,16 @@ add() {
 				[ -z "$command_config" ] && continue
 				[ "${command_config:0:1}" == "#" ] && continue
 
-				command=${command_config%%[[:space:]]*}
+				command_name=${command_config%%[[:space:]]*}
 
-				conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
+				locate_output=$(locate_cmd --exclude-dir "$module_install_path" "$command_name")
+				found_command=$?
 
-				if [ -n "$conflicting_module" ]; then
-					echo "ERROR: could not add module: command '$command' conflicts with module '$conflicting_module'" >&2
+				if [ "$found_command" == "0" ]; then
+					declare -A command_config="$locate_output"
+					echo "ERROR: could not add module: command '$command_name' conflicts with module '${command_config[module_name]}'" >&2
 					remove "$module_alias"
-					exit 1
+					return 1
 				fi
 			done
 		exec 3>&-

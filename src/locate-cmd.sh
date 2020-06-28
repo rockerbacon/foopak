@@ -28,8 +28,6 @@ EOF
 locate_cmd() {
 	###    DEFAULTS    ###
 	extra_tests=()
-	output_mode="script"
-	relative_path=true
 	###    DEFAULTS    ###
 
 	###    READ NAMED ARGS    ###
@@ -37,26 +35,18 @@ locate_cmd() {
 	while [ "$reading_named_args" == "true" ]; do
 		option=$1
 		case "$option" in
-			--absolute-path)
-				relative_path=false; shift 1
-			;;
-
 			--exclude-dir)
 				extra_tests+=("-not -path '$project_root/$2/*'"); shift 2
 			;;
 
-			--print-module)
-				output_mode="module"; shift 1
-			;;
-
 			--help|-h)
 				print_locate_cmd_help
-				exit 0
+				return 0
 			;;
 
 			--*|-*)
 				echo "ERROR: unknown option '$option'" >&2
-				exit 1
+				return 1
 			;;
 
 			*)
@@ -71,8 +61,8 @@ locate_cmd() {
 	###    READ POSITIONAL ARGS    ###
 
 	if [ ! -d "$project_root/foopak_modules" ]; then
-		echo "ERROR: no modules installed" >&2
-		return 0
+		echo "WARN: no modules installed" >&2
+		return 1
 	fi
 
 	find_query=" \
@@ -85,39 +75,32 @@ locate_cmd() {
 	command_config_line=$(bash -c "$find_query")
 
 	if [ -z "$command_config_line" ]; then
-		exit 0
+		return 1
 	fi
 
 	config_file=${command_config_line%%:*}
-	config=(${command_config_line#*:})
+	declare -a config="(${command_config_line#*:})"
 
-	module_dir=$(realpath "$(dirname "$config_file")/../")
-	if [ "$relative_path" == "true" ]; then
-		module_dir=${module_dir#$project_root/foopak_modules/}
-	fi
+	module_root=$(realpath "$(dirname "$config_file")/../")
+	module_name=${module_root#$project_root/foopak_modules/}
 
-	case "$output_mode" in
-		script)
-			i=1
-			command_type=${config[$i]}
-			case "$command_type" in
-				_alias_)
-					((i++))
-					echo "'${BASH_SOURCE[0]}' ${config[@]:$i}"
-				;;
-
-				_executable_)
-					((i++))
-				;&
-				*)
-					echo "$module_dir/${config[$i]}"
-				;;
-			esac
+	i=1
+	command_type=${config[$i]}
+	case "$command_type" in
+		_alias_)
+			((i++))
+			cmd=("${BASH_SOURCE[0]}" "${config[@]:$i}")
 		;;
 
-		module)
-			echo "$module_dir"
+		_executable_)
+			((i++))
+		;&
+		*)
+			cmd=("$module_root/${config[$i]}")
 		;;
 	esac
+
+	# shellcheck disable=SC2145
+	echo "([module_name]='$module_name' [module_root]='$module_root' [cmd]=\"(${cmd[@]@Q})\")"
 }
 
