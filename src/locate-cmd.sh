@@ -101,7 +101,7 @@ locate_cmd() {
 			command_type=${config[1]}
 			case "$command_type" in
 				_alias_)
-					echo "'${BASH_SOURCE[0]}' ${config[2]}"
+					echo "'${BASH_SOURCE[0]}' ${config[@]:2}"
 				;;
 
 				*)
