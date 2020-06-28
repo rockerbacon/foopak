@@ -15,7 +15,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: set git email
         run: git config user.email ci@foopak.org
