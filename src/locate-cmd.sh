@@ -98,14 +98,19 @@ locate_cmd() {
 
 	case "$output_mode" in
 		script)
-			command_type=${config[1]}
+			i=1
+			command_type=${config[$i]}
 			case "$command_type" in
 				_alias_)
-					echo "'${BASH_SOURCE[0]}' ${config[@]:2}"
+					((i++))
+					echo "'${BASH_SOURCE[0]}' ${config[@]:$i}"
 				;;
 
+				_executable_)
+					((i++))
+				;&
 				*)
-					echo "$module_dir/$command_type"
+					echo "$module_dir/${config[$i]}"
 				;;
 			esac
 		;;
