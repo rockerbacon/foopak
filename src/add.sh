@@ -136,7 +136,6 @@ add() {
 				[ "${command_config:0:1}" == "#" ] && continue
 
 				command=${command_config%%[[:space:]]*}
-				echo "$command" >&2
 
 				conflicting_module=$(locate_cmd --print-module --exclude-dir "$module_install_path" "$command")
 
