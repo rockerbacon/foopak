@@ -47,6 +47,10 @@ add() {
 	while [ "$reading_named_args" == "true" ]; do
 		option=$1
 		case "$option" in
+			--server|-s)
+				git_server=$2; shift 2
+			;;
+			
 			--alias|-a)
 				module_alias=$2; shift 2
 			;;

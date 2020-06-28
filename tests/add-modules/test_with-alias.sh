@@ -5,7 +5,7 @@ project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 oneTimeSetUp() {
 	# shellcheck source=./tests/setup_environment.sh
 	source "$project_root/tests/setup_environment.sh"
-	output=$(./foopak add --alias "mock-alias" rockerbacon/foopak-mock-module 2>&1); \
+	output=$(./foopak add --alias "mock-alias" --server "$project_root/mocks" foopak-mock-module.git 2>&1); \
 		exit_code=$?
 
 	gitmodules_content=$(cat .gitmodules)
@@ -55,7 +55,7 @@ test_should_add_module_using_relative_path() {
 	assertNotContains \
 		".gitmodules contains module added with absolute path:\n$output\n\n$gitmodules_content\n\n" \
 		"$gitmodules_content" \
-		"$project_root"
+		"path = $project_root"
 }
 
 # shellcheck disable=SC1090
