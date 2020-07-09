@@ -18,8 +18,11 @@ OPTIONS:
 			default is MODULE with slashes
 			replaced by underscores
 
-	--tag,-t,	use specific tag or commit
-	--commit,-c	default is the latest commit in the default remote
+	--branch,-b	use specific branch
+			default is the default remote branch
+
+	--commit,-c,	use specific tag or commit
+	--tag,-t	default is the latest commit in the default remote
 
 	--dir,-d	add module under different directory
 			default is foopak_modules
@@ -27,21 +30,21 @@ OPTIONS:
 				modules outside 'foopak_modules'
 				will not be scanned for commands
 
-	--branch,-b	use specific branch
-			default is the default remote branch
-
 	--help,-h	print this help message and exit
 
-	--http,--https	use HTTP or HTTPS when adding the module
-			by default, modules are added using SSH
+	--http		use HTTP when adding the module
+			by default, modules are added using HTTPS
+
+	--ssh		use SSH when adding the module
+			by default, modules are added using HTTPS
 
 EOF
 }
 
 add() {
 	###   DEFAULTS    ###
-	protocol_prefix="git@"
-	protocol_domain_terminator=":"
+	protocol_prefix="https://"
+	protocol_domain_terminator="/"
 	git_server_domain="github.com"
 	module_home_relative_dir="foopak_modules"
 	module_options=()
@@ -73,10 +76,16 @@ add() {
 				exit 0
 			;;
 
-			--http|--https)
+			--http)
 				shift 1
-				protocol_prefix="${option#--}://"
+				protocol_prefix="http://"
 				protocol_domain_terminator="/"
+			;;
+
+			--ssh)
+				shift 1
+				protocol_prefix="git@"
+				protocol_domain_terminator=":"
 			;;
 
 			--*|-*)

@@ -5,7 +5,7 @@ project_root=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 oneTimeSetUp() {
 	# shellcheck source=./tests/setup_environment.sh
 	source "$project_root/tests/setup_environment.sh"
-	output=$(./foopak add --https rockerbacon/foopak-mock-module 2>&1); \
+	output=$(./foopak add --ssh rockerbacon/foopak-mock-module 2>&1); \
 		exit_code=$?
 
 	gitmodules_content=$(cat .gitmodules)
@@ -58,11 +58,11 @@ test_should_add_module_using_relative_path() {
 		"$project_root"
 }
 
-test_should_add_module_using_https() {
+test_should_add_module_using_ssh() {
 	assertContains \
 		".gitmodules contains module added with wrong protocol:\n$output\n\n$gitmodules_content\n\n" \
 		"$gitmodules_content" \
-		"https://github.com/rockerbacon/foopak-mock-module"
+		"git@github.com:rockerbacon/foopak-mock-module"
 }
 
 # shellcheck disable=SC1090

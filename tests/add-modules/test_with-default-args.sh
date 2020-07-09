@@ -58,11 +58,11 @@ test_should_add_module_using_relative_path() {
 		"$project_root"
 }
 
-test_should_add_module_using_ssh() {
+test_should_add_module_using_https() {
 	assertContains \
 		".gitmodules contains module added with wrong protocol:\n$output\n\n$gitmodules_content\n\n" \
 		"$gitmodules_content" \
-		"git@github.com:rockerbacon/foopak-mock-module"
+		"https://github.com/rockerbacon/foopak-mock-module"
 }
 
 # shellcheck disable=SC1090
