@@ -32,12 +32,17 @@ OPTIONS:
 
 	--help,-h	print this help message and exit
 
+	--http,--https	use HTTP or HTTPS when adding the module
+			by default, modules are added using SSH
+
 EOF
 }
 
 add() {
 	###   DEFAULTS    ###
-	git_server="https://github.com"
+	protocol_prefix="git@"
+	protocol_domain_terminator=":"
+	git_server_domain="github.com"
 	module_home_relative_dir="foopak_modules"
 	module_options=()
 	###   DEFAULTS   ###
@@ -66,6 +71,12 @@ add() {
 			--help|-h)
 				print_add_help
 				exit 0
+			;;
+
+			--http|--https)
+				shift 1
+				protocol_prefix="${option#--}://"
+				protocol_domain_terminator="/"
 			;;
 
 			--*|-*)
@@ -108,8 +119,9 @@ add() {
 		exit 1
 	fi
 
+	repository_address="${protocol_prefix}${git_server_domain}${protocol_domain_terminator}${module_path}"
 	cd "$project_root" || exit 1
-	git submodule add "${module_options[@]}" "$git_server/$module_path" "$module_install_path"
+	git submodule add "${module_options[@]}" "$repository_address" "$module_install_path"
 
 	if [ -n "$module_version" ]; then
 		restore_workdir=$PWD
