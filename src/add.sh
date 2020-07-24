@@ -18,8 +18,11 @@ OPTIONS:
 			default is MODULE with slashes
 			replaced by underscores
 
-	--tag,-t,	use specific tag or commit
-	--commit,-c	default is the latest commit in the default remote
+	--branch,-b	use specific branch
+			default is the default remote branch
+
+	--commit,-c,	use specific tag or commit
+	--tag,-t	default is the latest commit in the default remote
 
 	--dir,-d	add module under different directory
 			default is foopak_modules
@@ -27,17 +30,22 @@ OPTIONS:
 				modules outside 'foopak_modules'
 				will not be scanned for commands
 
-	--branch,-b	use specific branch
-			default is the default remote branch
-
 	--help,-h	print this help message and exit
+
+	--http		use HTTP when adding the module
+			by default, modules are added using HTTPS
+
+	--ssh		use SSH when adding the module
+			by default, modules are added using HTTPS
 
 EOF
 }
 
 add() {
 	###   DEFAULTS    ###
-	git_server="https://github.com"
+	protocol_prefix="https://"
+	protocol_domain_terminator="/"
+	git_server_domain="github.com"
 	module_home_relative_dir="foopak_modules"
 	module_options=()
 	###   DEFAULTS   ###
@@ -66,6 +74,18 @@ add() {
 			--help|-h)
 				print_add_help
 				exit 0
+			;;
+
+			--http)
+				shift 1
+				protocol_prefix="http://"
+				protocol_domain_terminator="/"
+			;;
+
+			--ssh)
+				shift 1
+				protocol_prefix="git@"
+				protocol_domain_terminator=":"
 			;;
 
 			--*|-*)
@@ -108,8 +128,9 @@ add() {
 		exit 1
 	fi
 
+	repository_address="${protocol_prefix}${git_server_domain}${protocol_domain_terminator}${module_path}"
 	cd "$project_root" || exit 1
-	git submodule add "${module_options[@]}" "$git_server/$module_path" "$module_install_path"
+	git submodule add "${module_options[@]}" "$repository_address" "$module_install_path"
 
 	if [ -n "$module_version" ]; then
 		restore_workdir=$PWD
