@@ -15,7 +15,10 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-          ssh-key: ${{ secrets.CI_SSH_KEY }}
+
+      - uses: webfactory/ssh-agent@v0.4.0
+        with:
+          ssh-private-key: ${{ secrets.CI_SSH_KEY }}
 
       - name: set git email
         run: git config user.email ${{ secrets.CI_EMAIL }}
