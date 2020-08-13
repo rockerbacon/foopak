@@ -89,18 +89,19 @@ locate_cmd() {
 	case "$command_type" in
 		_alias_)
 			((i++))
-			cmd=("${BASH_SOURCE[0]}" "${config[@]:$i}")
+			retval2=("${BASH_SOURCE[0]}" "${config[@]:$i}")
 		;;
 
 		_executable_)
 			((i++))
 		;&
 		*)
-			cmd=("$module_root/${config[$i]}")
+			retval2=("$module_root/${config[$i]}")
 		;;
 	esac
 
-	# shellcheck disable=SC2145
-	echo "([module_name]='$module_name' [module_root]='$module_root' [cmd]=\"(${cmd[@]@Q})\")"
+	export retval0=$module_root
+	export retval1=$module_name
+	export retval2
 }
 

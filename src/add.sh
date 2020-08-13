@@ -158,12 +158,12 @@ add() {
 
 				command_name=${command_config%%[[:space:]]*}
 
-				locate_output=$(locate_cmd --exclude-dir "$module_install_path" "$command_name")
+				locate_cmd --exclude-dir "$module_install_path" "$command_name"
 				found_command=$?
+				module_name=$retval1
 
 				if [ "$found_command" == "0" ]; then
-					declare -A command_config="$locate_output"
-					echo "ERROR: could not add module: command '$command_name' conflicts with module '${command_config[module_name]}'" >&2
+					echo "ERROR: could not add module: command '$command_name' conflicts with module '$module_name'" >&2
 					remove "$module_alias"
 					return 1
 				fi

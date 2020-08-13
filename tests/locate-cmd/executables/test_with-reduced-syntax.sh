@@ -19,11 +19,16 @@ script3 'path/containing spaces/script3'
 
 EOF
 
-	output=$(./foopak locate-cmd script1 2>&1)
+	# shellcheck disable=SC1091
+	source ./foopak source-libs
+
+	locate_cmd script1
 	exit_status=$?
 
 	if [ "$exit_status" == "0" ]; then
-		declare -gA script_location="$output"
+		module_root="${retval0:?}"
+		module_name="${retval1:?}"
+		cmd=("${retval2[@]}")
 	fi
 }
 
@@ -33,7 +38,7 @@ oneTimeTearDown() {
 
 test_should-execute-successfuly() {
 	assertEquals \
-		"exited with status '$exit_status':\n$output\n" \
+		"exited with status '$exit_status'\n" \
 		"0" \
 		"$exit_status"
 }
@@ -41,19 +46,19 @@ test_should-execute-successfuly() {
 test_should-correctly-determine-module-name() {
 	assertEquals \
 		"author/mock-module" \
-		"${script_location[module_name]}"
+		"$module_name"
 }
 
 test_should-correctly-determine-module-root() {
 	assertEquals \
 		"$test_environment/foopak_modules/author/mock-module" \
-		"${script_location[module_root]}"
+		"$module_root"
 }
 
 test_should-correctly-determine-command() {
 	assertEquals \
-		"('$test_environment/foopak_modules/author/mock-module/path/to/script1')" \
-		"${script_location[cmd]}"
+		"'$test_environment/foopak_modules/author/mock-module/path/to/script1'" \
+		"${cmd[@]@Q}"
 }
 
 # shellcheck disable=SC1090

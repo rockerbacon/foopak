@@ -19,12 +19,11 @@ script3 _alias_ script1 'arg containing spaces'
 
 EOF
 
-	output=$(./foopak locate-cmd script3 2>&1)
-	exit_status=$?
+	# shellcheck disable=SC1091
+	source ./foopak source-libs
 
-	if [ "$exit_status" == "0" ]; then
-		declare -gA script_location="$output"
-	fi
+	locate_cmd script3
+	exit_status=$?
 }
 
 oneTimeTearDown() {
@@ -33,27 +32,29 @@ oneTimeTearDown() {
 
 test_should-execute-successfuly() {
 	assertEquals \
-		"exited with status '$exit_status':\n$output\n" \
+		"exited with status '$exit_status'\n" \
 		"0" \
 		"$exit_status"
-}
-
-test_should-correctly-determine-module-name() {
-	assertEquals \
-		"author/mock-module" \
-		"${script_location[module_name]}"
 }
 
 test_should-correctly-determine-module-root() {
 	assertEquals \
 		"$test_environment/foopak_modules/author/mock-module" \
-		"${script_location[module_root]}"
+		"${retval0:-}"
+}
+
+test_should-correctly-determine-module-name() {
+	assertEquals \
+		"author/mock-module" \
+		"${retval1:-}"
 }
 
 test_should-correctly-determine-command() {
+	# shellcheck disable=SC2124,SC2154
+	cmd_str=${retval2[@]@Q}
 	assertEquals \
-		"('./foopak' 'script1' 'arg containing spaces')" \
-		"${script_location[cmd]}"
+		"'./foopak' 'script1' 'arg containing spaces'" \
+		"$cmd_str"
 }
 
 # shellcheck disable=SC1090
