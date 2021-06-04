@@ -17,7 +17,18 @@ main() {
 		;;
 
 		locate-cmd)
-			locate_cmd "$@"
+			if locate_cmd "$@"; then
+				echo "module_root=$retval0"
+				echo "module_name=$retval1"
+				# shellcheck disable=SC2145
+				echo "cmd=${retval2[@]@Q}"
+			else
+				echo "Command not found" >&2
+			fi
+		;;
+
+		source-libs)
+			# do nothing, this is just for lib initialization
 		;;
 
 		*)
