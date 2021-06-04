@@ -1,0 +1,31 @@
+name: tests
+
+on:
+  pull_request:
+    branches:
+      - v1
+      - master
+      - architecture
+
+jobs:
+  all-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: webfactory/ssh-agent@v0.4.0
+        with:
+          ssh-private-key: ${{ secrets.CI_SSH_KEY }}
+
+      - name: set git email
+        run: git config user.email ${{ secrets.CI_EMAIL }}
+
+      - name: set git user
+        run: git config user.name ${{ secrets.CI_USER }}
+
+      - name: run all tests
+        run: ./ci/tests.sh
+
